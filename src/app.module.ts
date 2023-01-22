@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -6,6 +6,7 @@ import { UserModule } from './modules/user/user.module';
 import { ResponseInterceptor } from './helper/response.interceptor';
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { HttpExceptionFilter } from './helper/http-exception.filter';
+import { LoggerMiddleware } from './helper/logger.middleware';
 
 @Module({
   imports: [
@@ -22,7 +23,7 @@ import { HttpExceptionFilter } from './helper/http-exception.filter';
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         synchronize: true,
         autoLoadEntities: true,
-        logging: true,
+        logging: false,
         // logger: new DatabaseMysqlLogger(),
         timezone: '+09:00',
         legacySpatialSupport: false, //fix version mysql 8
@@ -43,4 +44,11 @@ import { HttpExceptionFilter } from './helper/http-exception.filter';
     },
   ],
 })
-export class AppModule {}
+export class AppModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes({
+      path: '*',
+      method: RequestMethod.ALL,
+    });
+  }
+}

@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
 import { VLogin } from 'global/user/dto/login.dto';
 import { VSignUp } from 'global/user/dto/signup.dto';
 import { UserService } from './user.service';
@@ -15,5 +15,10 @@ export class UserController {
   @Post('signup')
   async signup(@Body() body: VSignUp) {
     return this.userService.signup(body);
+  }
+
+  @Get('')
+  async getUser() {
+    return this.userService.getUser();
   }
 }

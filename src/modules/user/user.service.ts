@@ -76,6 +76,7 @@ export class UserService {
     userParams.phone_number = body.phone_number;
     userParams.user_name = body.username;
     userParams.password = await handleBCRYPTHash(body.password);
+    userParams.is_deleted = EIsDelete.NOT_DELETE;
     userParams.token = token;
 
     await this.userRepository.save(userParams);
@@ -108,5 +109,12 @@ export class UserService {
         is_deleted: EIsDelete.NOT_DELETE,
       },
     });
+  }
+
+  async getUser(entityManager?: EntityManager) {
+    const userRepository = entityManager
+      ? entityManager.getRepository<User>('user')
+      : this.userRepository;
+    return await userRepository.find();
   }
 }
