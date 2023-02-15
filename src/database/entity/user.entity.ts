@@ -1,5 +1,16 @@
 import { EIsDelete } from 'enum';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  OneToMany,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { Post } from './post.entity';
+import { PostComment } from './postComment.entity';
+import { PostGiveAway } from './postGiveAway.entity';
+import { PostLike } from './postLike.entity';
+import { UserDetail } from './userDetail.entity';
 
 @Entity('user')
 export class User {
@@ -43,4 +54,19 @@ export class User {
     default: null,
   })
   updated_at: Date | null;
+
+  @OneToOne(() => UserDetail, (userDetail) => userDetail.user)
+  userDetail: UserDetail;
+
+  @OneToMany(() => Post, (post) => post.user)
+  posts: Post[];
+
+  @OneToMany(() => PostComment, (postComment) => postComment.user)
+  postComments: PostComment[];
+
+  @OneToMany(() => PostLike, (postLike) => postLike.user)
+  postLikes: PostLike[];
+
+  @OneToMany(() => PostGiveAway, (postGiveAways) => postGiveAways.user)
+  postGiveAways: PostGiveAway[];
 }
