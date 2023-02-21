@@ -9,19 +9,21 @@ import { HttpExceptionFilter } from './helper/http-exception.filter';
 import { LoggerMiddleware } from './helper/logger.middleware';
 import { PostModule } from './modules/post/post.module';
 import { JwtAuthGuard } from './core/global/auth/guard/jwt-auth.guard';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot(),
     TypeOrmModule.forRootAsync({
       // imports: [ConfigModule],
       // inject: [ConfigService],
       useFactory: () => ({
         type: 'mysql',
-        host: 'localhost',
-        port: 3306,
-        username: 'root',
-        password: 'n1nbmkbhgct',
-        database: 'almira',
+        host: process.env.DB_MYSQL_HOST,
+        port: process.env.DB_MYSQL_PORT,
+        username: process.env.DB_MYSQL_USER,
+        password: process.env.DB_MYSQL_PASSWORD,
+        database: process.env.DB_MYSQL_NAME,
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         synchronize: true,
         autoLoadEntities: true,

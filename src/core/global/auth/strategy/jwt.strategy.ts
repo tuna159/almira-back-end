@@ -16,8 +16,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: any) {
-    //CHAY THU 2
-    // noi check them nhu kieu tai khoan het han dung thu bla , block
     if (payload?.type === 0) {
       return payload;
     }
