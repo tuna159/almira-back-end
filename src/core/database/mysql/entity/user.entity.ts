@@ -6,11 +6,13 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { Message } from './message.entity';
 import { Post } from './post.entity';
 import { PostComment } from './postComment.entity';
-import { PostGiveAway } from './postGiveAway.entity';
 import { PostLike } from './postLike.entity';
+import { UserBlocking } from './userBlocking.entity';
 import { UserDetail } from './userDetail.entity';
+import { PostGift } from './postGift.entity';
 
 @Entity('user')
 export class User {
@@ -41,6 +43,9 @@ export class User {
   })
   is_deleted: number;
 
+  @Column({ name: 'total_points', type: 'int', default: 0 })
+  total_points: number;
+
   @Column({
     name: 'created_at',
     type: 'datetime',
@@ -67,6 +72,21 @@ export class User {
   @OneToMany(() => PostLike, (postLike) => postLike.user)
   postLikes: PostLike[];
 
-  @OneToMany(() => PostGiveAway, (postGiveAways) => postGiveAways.user)
-  postGiveAways: PostGiveAway[];
+  @OneToMany(() => Message, (message) => message.sender)
+  messagesSent: Message[];
+
+  @OneToMany(() => Message, (message) => message.receiver)
+  messagesReceived: Message[];
+
+  @OneToMany(() => UserBlocking, (userBlocking) => userBlocking.userOnBlocks)
+  userOnBlockings: UserBlocking[];
+
+  @OneToMany(() => UserBlocking, (userBlocking) => userBlocking.userByBlocks)
+  userByBlocking: UserBlocking[];
+
+  @OneToMany(() => PostGift, (uerPoint) => uerPoint.sender)
+  pointSent: PostGift[];
+
+  @OneToMany(() => PostGift, (uerPoint) => uerPoint.receiver)
+  pointReceived: PostGift[];
 }

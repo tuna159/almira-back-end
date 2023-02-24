@@ -4,20 +4,25 @@ import {
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
+  Unique,
 } from 'typeorm';
-import { Post } from './post.entity';
+import { Message } from './message.entity';
 
-@Entity('post_image')
-export class PostImage {
+@Unique(['message_id', 'sequence_no'])
+@Entity('message_image')
+export class MessageImage {
   @PrimaryGeneratedColumn({
-    name: 'post_media_id',
+    name: 'message_image_id',
     type: 'int',
     unsigned: true,
   })
-  post_image_id: number;
+  message_image_id: number;
 
-  @Column({ name: 'post_id', type: 'int', unsigned: true })
-  post_id: number;
+  @Column({ name: 'message_id', type: 'int', unsigned: true })
+  message_id: number;
+
+  @Column({ name: 'sequence_no', type: 'int', default: 1 })
+  sequence_no: number;
 
   @Column({
     name: 'image_url',
@@ -29,16 +34,13 @@ export class PostImage {
   image_url: string | null;
 
   @Column({
-    name: 'title',
+    name: 'thumbnail_url',
     type: 'varchar',
     length: 512,
     default: null,
     nullable: true,
   })
-  title: string;
-
-  @Column({ name: 'size', type: 'int', default: null, nullable: true })
-  size: number;
+  thumbnail_url: string | null;
 
   @Column({
     name: 'created_at',
@@ -55,7 +57,7 @@ export class PostImage {
   })
   updated_at: Date | null;
 
-  @ManyToOne(() => Post, { onUpdate: 'CASCADE' })
-  @JoinColumn({ name: 'post_id' })
-  post: Post;
+  @ManyToOne(() => Message, { onUpdate: 'CASCADE' })
+  @JoinColumn({ name: 'message_id' })
+  message: Message;
 }

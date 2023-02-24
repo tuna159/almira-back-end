@@ -11,6 +11,7 @@ import { PostComment } from './postComment.entity';
 import { PostLike } from './postLike.entity';
 import { PostImage } from './postImage.entity';
 import { User } from './user.entity';
+import { PostGift } from './postGift.entity';
 
 @Entity('post')
 export class Post {
@@ -24,9 +25,6 @@ export class Post {
   @Column({ name: 'user_id', type: 'char', length: 36 })
   user_id: string;
 
-  @Column({ name: 'title', type: 'varchar', length: 70 })
-  title: string;
-
   @Column({ name: 'content', type: 'varchar', length: 800, default: null })
   content: string;
 
@@ -36,13 +34,6 @@ export class Post {
     default: EIsIncognito.INCOGNITO,
   })
   is_incognito: number;
-
-  @Column({
-    name: 'post_type',
-    type: 'tinyint',
-    default: 0,
-  })
-  post_type: number;
 
   @Column({
     name: 'is_deleted',
@@ -79,4 +70,7 @@ export class Post {
 
   @OneToMany(() => PostLike, (postLike) => postLike.post)
   postLikes: PostLike[];
+
+  @OneToMany(() => PostGift, (postGifts) => postGifts.post)
+  postGifts: PostGift[];
 }

@@ -4,8 +4,10 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { Activity } from './activity.entity';
 import { Post } from './post.entity';
 import { User } from './user.entity';
 
@@ -64,4 +66,7 @@ export class PostComment {
   @ManyToOne(() => Post, { onUpdate: 'CASCADE' })
   @JoinColumn({ name: 'post_id' })
   post: Post;
+
+  @OneToOne(() => Activity, (activity) => activity.postComment)
+  activity: Activity;
 }

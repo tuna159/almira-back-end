@@ -15,7 +15,6 @@ export async function handleBCRYPTCompare(text: string, hash: string) {
 export function returnPostsData(user_id: string, post: DeepPartial<Post>) {
   return {
     post_id: post?.post_id,
-    title: post?.title,
     content: post?.content,
     user_data: {
       user_id:
@@ -40,9 +39,7 @@ export function returnPostsData(user_id: string, post: DeepPartial<Post>) {
       .includes(user_id),
     files: post?.postImage?.map((image) => {
       return {
-        media_type: image?.media_type,
-        media_url: image?.media_url,
-        thumbnail_url: image?.thumbnail_url,
+        image_url: image?.image_url,
         title: image?.title,
         size: image?.size,
       };
@@ -50,7 +47,6 @@ export function returnPostsData(user_id: string, post: DeepPartial<Post>) {
     created: post?.created_at,
     updated: post?.updated_at,
     is_incognito: !!post?.is_incognito,
-    post_type: post?.post_type,
   };
 }
 

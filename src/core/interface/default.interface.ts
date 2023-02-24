@@ -3,3 +3,13 @@ export interface IUserData {
   phone?: string;
   [key: string]: any;
 }
+export enum EActivityType {
+  COMMENT = 0,
+  LIKE_POST = 1,
+  LIKE_COMMENT = 2,
+}
+
+export enum EReadActivity {
+  READ = 1,
+  UN_READ = 0,
+}
