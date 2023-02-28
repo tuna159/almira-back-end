@@ -9,4 +9,5 @@ export enum ErrorMessage {
   MIN_LENGTH_1 = 'error.MIN_LENGTH_1',
   INVALID_PARAM = 'error.INVALID_PARAM',
   POST_NOT_EXIST = 'error.POST_NOT_EXIST',
+  POST_LIKE_EXIST = 'error.POST_LIKE_EXIST',
 }

@@ -15,9 +15,12 @@ import { VLogin } from 'global/user/dto/login.dto';
 import { VSignUp } from 'global/user/dto/signup.dto';
 import { User } from 'src/core/database/mysql/entity/user.entity';
 import { handleBCRYPTCompare, handleBCRYPTHash } from 'src/helper/utils';
+import { Connection } from 'typeorm';
 
 import { UserService } from 'src/modules/user/user.service';
 import { IResponseAuth } from './interface';
+import { UserDetail } from 'src/core/database/mysql/entity/userDetail.entity';
+import { UserDetailService } from 'src/modules/user-detail/user-detail.service';
 
 // import admin from 'src/main';
 
@@ -28,7 +31,9 @@ export class AuthService {
   constructor(
     @Inject(forwardRef(() => UserService))
     private userService: UserService,
+    private userDetailService: UserDetailService,
     public jwtService: JwtService,
+    private connection: Connection,
   ) {}
 
   async getUserById(user_id: string) {
@@ -68,7 +73,21 @@ export class AuthService {
     userParams.user_name = body.username;
     userParams.password = await handleBCRYPTHash(body.password);
     userParams.is_deleted = EIsDelete.NOT_DELETE;
-    const user = await this.userService.createUser(userParams);
+    const user = await this.connection.transaction(async (manager) => {
+      const newUser = await this.userService.createUser(userParams, manager);
+
+      const userDetailParams = new UserDetail();
+      userDetailParams.user_id = newUser.user_id;
+      userDetailParams.email = body.email;
+      userDetailParams.image_url = body?.image?.image_url;
+      userDetailParams.thumbnail_url = body?.image?.thumbnail_url;
+      userDetailParams.gender = body?.gender;
+      userDetailParams.birthdate = new Date(body?.birthdate);
+
+      await this.userDetailService.createUserDetail(userDetailParams, manager);
+
+      return await this.userService.findUserByUserId(newUser.user_id, manager);
+    });
 
     const data = await this.returnResponseAuth(user);
 

@@ -22,6 +22,7 @@ import { PostComment } from 'src/core/database/mysql/entity/postComment.entity';
 import { PostCommentService } from '../post-comment/post-comment.service';
 import { Activity } from 'src/core/database/mysql/entity/activity.entity';
 import { ActivityService } from '../activity/activity.service';
+import { PostLikeService } from '../post-like/post-like.service';
 
 @Injectable()
 export class PostService {
@@ -33,6 +34,7 @@ export class PostService {
     private postCommentService: PostCommentService,
     @Inject(forwardRef(() => ActivityService))
     private activityService: ActivityService,
+    private postLikeService: PostLikeService,
   ) {}
 
   async getPosts(userData: IUserData, entityManager?: EntityManager) {
@@ -65,7 +67,9 @@ export class PostService {
       });
 
     const [listPosts] = await queryBuilder.getManyAndCount();
+
     data = listPosts.map((post) => returnPostsData(userData.user_id, post));
+
     return data;
   }
 
@@ -164,8 +168,6 @@ export class PostService {
       ];
       const activityParamsAR = [];
       list.forEach((user_id) => {
-        console.log(user_id, 2);
-
         const activityParams = new Activity();
         activityParams.post_id = post_id;
         activityParams.user_id = user_id;
@@ -195,5 +197,55 @@ export class PostService {
     } else {
       return false;
     }
+  }
+
+  async createPostLike(userData: IUserData, post_id: number) {
+    const post = await this.getUserPostedByPostId(post_id);
+
+    if (!post) {
+      throw new HttpException(
+        ErrorMessage.POST_NOT_EXIST,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const postLike = await this.connection.transaction(async (manager) => {
+      const data = await Promise.all([
+        this.postLikeService.addLikePost(post_id, userData.user_id, manager),
+        this.activityService.handleAddActivityLike(
+          post,
+          userData.user_id,
+          manager,
+        ),
+      ]);
+
+      return data[0];
+    });
+
+    return { post_like_id: postLike.post_like_id };
+  }
+
+  async getUserPostedByPostId(post_id: number) {
+    const data = await this.postRepository
+      .createQueryBuilder('post')
+      .select()
+      .innerJoin('post.user', 'user')
+      .where('post.post_id = :post_id AND post.is_deleted = :is_deleted', {
+        post_id,
+        is_deleted: EIsDelete.NOT_DELETE,
+      })
+      .getOne();
+    if (!data) {
+      throw new HttpException(
+        ErrorMessage.POST_NOT_EXIST,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    return {
+      post_id: data.post_id,
+      title: data.content,
+      user_id: data.user_id,
+      is_incognito: data.is_incognito,
+    };
   }
 }

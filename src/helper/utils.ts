@@ -17,10 +17,11 @@ export function returnPostsData(user_id: string, post: DeepPartial<Post>) {
     post_id: post?.post_id,
     content: post?.content,
     user_data: {
-      user_id:
-        post.user_id != user_id || post.user.is_deleted == EIsDelete.DELETED
-          ? null
-          : post.user_id,
+      nick_name: post.user.user_name,
+      user_id: post.user_id,
+      // post.user_id != user_id || post.user.is_deleted == EIsDelete.DELETED
+      //   ? null
+      //   : post.user_id,
       user_image: {
         image_url: post.user.userDetail.image_url,
         thumbnail_url: post.user.userDetail.thumbnail_url,
@@ -37,7 +38,7 @@ export function returnPostsData(user_id: string, post: DeepPartial<Post>) {
     is_liked: post?.postLikes
       ?.map((postLike) => postLike?.user_id)
       .includes(user_id),
-    files: post?.postImage?.map((image) => {
+    image: post?.postImage?.map((image) => {
       return {
         image_url: image?.image_url,
         title: image?.title,

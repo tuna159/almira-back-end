@@ -41,4 +41,18 @@ export class PostController {
   ) {
     return await this.postService.createComment(userData, post_id, body);
   }
+
+  @Post('/:post_id/likes')
+  async handleAddPostLike(
+    @UserData() userData: IUserData,
+    @Param(
+      'post_id',
+      new ParseIntPipe({
+        errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE,
+      }),
+    )
+    post_id: number,
+  ) {
+    return await this.postService.createPostLike(userData, post_id);
+  }
 }

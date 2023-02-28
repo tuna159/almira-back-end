@@ -84,4 +84,17 @@ export class UserService {
       : this.userRepository;
     return await userRepository.update({ user_id }, body);
   }
+
+  async findUserByUserId(userId: string, entityManager?: EntityManager) {
+    const userRepository = entityManager
+      ? entityManager.getRepository<User>('user')
+      : this.userRepository;
+    return await userRepository.findOne({
+      where: {
+        user_id: userId,
+        is_deleted: EIsDelete.NOT_DELETE,
+      },
+      relations: ['userDetail'],
+    });
+  }
 }

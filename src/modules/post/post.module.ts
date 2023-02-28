@@ -6,6 +6,7 @@ import { Post } from 'src/core/database/mysql/entity/post.entity';
 import { PostImageModule } from '../post-image/post-image.module';
 import { PostCommentModule } from '../post-comment/post-comment.module';
 import { ActivityModule } from '../activity/activity.module';
+import { PostLikeModule } from '../post-like/post-like.module';
 
 @Module({
   controllers: [PostController],
@@ -15,6 +16,7 @@ import { ActivityModule } from '../activity/activity.module';
     PostImageModule,
     PostCommentModule,
     forwardRef(() => ActivityModule),
+    PostLikeModule,
   ],
 })
 export class PostModule {}

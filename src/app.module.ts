@@ -13,6 +13,8 @@ import { ConfigModule } from '@nestjs/config';
 import { PostImageModule } from './modules/post-image/post-image.module';
 import { PostCommentModule } from './modules/post-comment/post-comment.module';
 import { ActivityModule } from './modules/activity/activity.module';
+import { PostLikeModule } from './modules/post-like/post-like.module';
+import { UserDetailModule } from './modules/user-detail/user-detail.module';
 
 @Module({
   imports: [
@@ -41,6 +43,8 @@ import { ActivityModule } from './modules/activity/activity.module';
     PostImageModule,
     PostCommentModule,
     ActivityModule,
+    PostLikeModule,
+    UserDetailModule,
   ],
   controllers: [AppController],
   providers: [
