@@ -7,4 +7,6 @@ export enum ErrorMessage {
   TOKEN_EXPIRED = 'TOKEN_EXPIRED',
   ACCOUNT_NOT_EXISTS = 'error.ACCOUNT_NOT_EXISTS',
   MIN_LENGTH_1 = 'error.MIN_LENGTH_1',
+  INVALID_PARAM = 'error.INVALID_PARAM',
+  POST_NOT_EXIST = 'error.POST_NOT_EXIST',
 }

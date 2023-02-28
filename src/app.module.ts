@@ -11,6 +11,8 @@ import { PostModule } from './modules/post/post.module';
 import { JwtAuthGuard } from './core/global/auth/guard/jwt-auth.guard';
 import { ConfigModule } from '@nestjs/config';
 import { PostImageModule } from './modules/post-image/post-image.module';
+import { PostCommentModule } from './modules/post-comment/post-comment.module';
+import { ActivityModule } from './modules/activity/activity.module';
 
 @Module({
   imports: [
@@ -37,6 +39,8 @@ import { PostImageModule } from './modules/post-image/post-image.module';
     UserModule,
     PostModule,
     PostImageModule,
+    PostCommentModule,
+    ActivityModule,
   ],
   controllers: [AppController],
   providers: [

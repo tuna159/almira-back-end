@@ -27,18 +27,18 @@ export class PostController {
     return this.postService.createPost(userData, body);
   }
 
-  // @Post('/:post_id/comments')
-  // async handleAddComment(
-  //   @UserData() userData: IUserData,
-  //   @Body() body: VAddComment,
-  //   @Param(
-  //     'post_id',
-  //     new ParseIntPipe({
-  //       errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE,
-  //     }),
-  //   )
-  //   post_id: number,
-  // ) {
-  //   return await this.postService.createComment(userData, post_id, body);
-  // }
+  @Post('/:post_id/comments')
+  async handleAddComment(
+    @UserData() userData: IUserData,
+    @Body() body: VAddComment,
+    @Param(
+      'post_id',
+      new ParseIntPipe({
+        errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE,
+      }),
+    )
+    post_id: number,
+  ) {
+    return await this.postService.createComment(userData, post_id, body);
+  }
 }

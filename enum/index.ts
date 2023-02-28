@@ -6,3 +6,8 @@ export enum EIsIncognito {
   NOT_INCOGNITO = 0,
   INCOGNITO = 1,
 }
+
+export enum EActivityType {
+  COMMENT = 0,
+  LIKE = 1,
+}

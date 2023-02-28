@@ -1,6 +1,12 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  forwardRef,
+  HttpException,
+  HttpStatus,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EIsDelete, EIsIncognito } from 'enum';
+import { EActivityType, EIsDelete, EIsIncognito } from 'enum';
 import { Post } from 'src/core/database/mysql/entity/post.entity';
 import { returnPostsData } from 'src/helper/utils';
 import { IUserData } from 'src/core/interface/default.interface';
@@ -10,6 +16,12 @@ import { DeepPartial } from 'typeorm/common/DeepPartial';
 import { Connection } from 'typeorm/connection/Connection';
 import { PostImage } from 'src/core/database/mysql/entity/postImage.entity';
 import { PostImageService } from '../post-image/post-image.service';
+import { VAddComment } from 'global/post/dto/addComment.dto';
+import { ErrorMessage } from 'enum/error';
+import { PostComment } from 'src/core/database/mysql/entity/postComment.entity';
+import { PostCommentService } from '../post-comment/post-comment.service';
+import { Activity } from 'src/core/database/mysql/entity/activity.entity';
+import { ActivityService } from '../activity/activity.service';
 
 @Injectable()
 export class PostService {
@@ -18,6 +30,9 @@ export class PostService {
     private postRepository: Repository<Post>,
     private postImageService: PostImageService,
     private connection: Connection,
+    private postCommentService: PostCommentService,
+    @Inject(forwardRef(() => ActivityService))
+    private activityService: ActivityService,
   ) {}
 
   async getPosts(userData: IUserData, entityManager?: EntityManager) {
@@ -95,5 +110,90 @@ export class PostService {
       ? entityManager.getRepository<Post>('post')
       : this.postRepository;
     return await postRepository.save(value);
+  }
+
+  async createComment(userData: IUserData, post_id: number, body: VAddComment) {
+    if (!body.content) {
+      throw new HttpException(
+        ErrorMessage.INVALID_PARAM,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    if (body.content === '' || body.content === null) {
+      throw new HttpException(
+        ErrorMessage.INVALID_PARAM,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    const isExist = await this.checkPost({
+      post_id,
+      is_deleted: EIsDelete.NOT_DELETE,
+    });
+
+    if (!isExist) {
+      throw new HttpException(
+        ErrorMessage.POST_NOT_EXIST,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    const postComment = await this.connection.transaction(async (manager) => {
+      const postCommentParams = new PostComment();
+      postCommentParams.post_id = post_id;
+      postCommentParams.user_id = userData.user_id;
+      postCommentParams.content = body.content;
+      postCommentParams.is_incognito =
+        body.is_incognito === false
+          ? EIsIncognito.NOT_INCOGNITO
+          : EIsIncognito.INCOGNITO;
+
+      const postComment = await this.postCommentService.addPostComment(
+        postCommentParams,
+        manager,
+      );
+
+      const repliedList = await this.postCommentService.getRepliedUserList(
+        postComment.post_id,
+      );
+
+      repliedList.push(isExist.user_id);
+
+      const list = [
+        ...new Set(
+          repliedList.filter((user_id) => user_id != userData.user_id),
+        ),
+      ];
+      const activityParamsAR = [];
+      list.forEach((user_id) => {
+        console.log(user_id, 2);
+
+        const activityParams = new Activity();
+        activityParams.post_id = post_id;
+        activityParams.user_id = user_id;
+        activityParams.from_user_id = userData.user_id;
+        activityParams.post_comment_id = postComment.post_comment_id;
+        activityParams.comment = postComment.content;
+        activityParams.is_incognito = postComment.is_incognito;
+        activityParams.type = EActivityType.COMMENT;
+        activityParams.date_time = new Date();
+        activityParamsAR.push(activityParams);
+      });
+
+      this.activityService.createActivity(activityParamsAR, manager);
+    });
+    return postComment;
+  }
+
+  async checkPost(fieldList: DeepPartial<Post>, entityManager?: EntityManager) {
+    const postRepository = entityManager
+      ? entityManager.getRepository<Post>('post')
+      : this.postRepository;
+
+    const post = await postRepository.findOne(fieldList);
+
+    if (post) {
+      return post;
+    } else {
+      return false;
+    }
   }
 }
