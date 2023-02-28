@@ -14,6 +14,7 @@ export class UserController {
     return this.userService.login(body);
   }
 
+  @Public()
   @Post('signup')
   async signup(@Body() body: VSignUp) {
     return this.userService.signup(body);

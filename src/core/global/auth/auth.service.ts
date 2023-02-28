@@ -55,16 +55,7 @@ export class AuthService {
   }
 
   async signup(body: VSignUp) {
-    const email = await this.userService.getUserByEmail(body.email_address);
-
     const userName = await this.userService.getUserByUserName(body.username);
-
-    if (email) {
-      throw new HttpException(
-        ErrorMessage.GMAIL_ALREADY_EXITS,
-        HttpStatus.BAD_REQUEST,
-      );
-    }
 
     if (userName) {
       throw new HttpException(

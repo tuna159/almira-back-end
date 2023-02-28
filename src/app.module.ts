@@ -10,6 +10,7 @@ import { LoggerMiddleware } from './helper/logger.middleware';
 import { PostModule } from './modules/post/post.module';
 import { JwtAuthGuard } from './core/global/auth/guard/jwt-auth.guard';
 import { ConfigModule } from '@nestjs/config';
+import { PostImageModule } from './modules/post-image/post-image.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { ConfigModule } from '@nestjs/config';
     }),
     UserModule,
     PostModule,
+    PostImageModule,
   ],
   controllers: [AppController],
   providers: [
