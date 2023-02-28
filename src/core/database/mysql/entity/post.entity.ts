@@ -62,7 +62,7 @@ export class Post {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @OneToMany(() => PostImage, (postMedia) => postMedia.post)
+  @OneToMany(() => PostImage, (postImage) => postImage.post)
   postImage: PostImage[];
 
   @OneToMany(() => PostComment, (postComment) => postComment.post)

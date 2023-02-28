@@ -12,12 +12,18 @@ export class UserDetail {
   @PrimaryGeneratedColumn('uuid', { name: 'user_id' })
   user_id: string;
 
+  @Column({ name: 'email', type: 'varchar', length: 255, default: null })
+  email: string;
+
   @Column({
     name: 'gender',
     type: 'int',
     default: -1,
   })
   gender: number;
+
+  @Column({ name: 'phone_number', type: 'varchar', length: 65, default: null })
+  phone_number: string;
 
   @Column({ name: 'latitude', type: 'float', default: null })
   latitude: number;

@@ -51,14 +51,6 @@ export class PostComment {
   })
   created_at: Date;
 
-  @Column({
-    name: 'updated_at',
-    type: 'timestamp',
-    default: null,
-    onUpdate: 'current_timestamp',
-  })
-  updated_at: Date | null;
-
   @ManyToOne(() => User, { onUpdate: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user: User;

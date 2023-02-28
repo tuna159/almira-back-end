@@ -74,8 +74,6 @@ export class AuthService {
     }
 
     const userParams = new User();
-    userParams.email = body.email_address;
-    userParams.phone_number = body.phone_number;
     userParams.user_name = body.username;
     userParams.password = await handleBCRYPTHash(body.password);
     userParams.is_deleted = EIsDelete.NOT_DELETE;

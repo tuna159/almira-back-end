@@ -25,12 +25,6 @@ export class User {
   @Column({ name: 'password', type: 'varchar', length: 255, default: null })
   password: string;
 
-  @Column({ name: 'phone_number', type: 'varchar', length: 65, default: null })
-  phone_number: string;
-
-  @Column({ name: 'email', type: 'varchar', length: 255, default: null })
-  email: string;
-
   @Column({ name: 'token', type: 'mediumtext', nullable: true })
   token: string | null;
 

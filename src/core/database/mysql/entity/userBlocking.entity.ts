@@ -39,14 +39,6 @@ export class UserBlocking {
   })
   created_at: Date;
 
-  @Column({
-    name: 'updated_at',
-    type: 'timestamp',
-    default: null,
-    onUpdate: 'current_timestamp',
-  })
-  updated_at: Date | null;
-
   @ManyToOne(() => User, { onUpdate: 'CASCADE' })
   @JoinColumn({ name: 'blocked_on_id' })
   userOnBlocks: User;
