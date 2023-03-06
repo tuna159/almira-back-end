@@ -1,5 +1,6 @@
 import * as bcrypt from 'bcrypt';
 import { EIsDelete } from 'enum';
+import moment = require('moment');
 import { Post } from 'src/core/database/mysql/entity/post.entity';
 import { DeepPartial } from 'typeorm';
 
@@ -41,11 +42,13 @@ export function returnPostsData(user_id: string, post: DeepPartial<Post>) {
     image: post?.postImage?.map((image) => {
       return {
         image_url: image?.image_url,
-        title: image?.title,
-        size: image?.size,
+        // title: image?.title,
+        // size: image?.size,
       };
     }),
-    created: post?.created_at,
+    created: moment(JSON.stringify(post?.created_at), 'YYYY-MM-DD').format(
+      'YYYY-MM-DD',
+    ),
     updated: post?.updated_at,
     is_incognito: !!post?.is_incognito,
   };

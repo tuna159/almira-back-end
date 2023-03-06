@@ -109,6 +109,7 @@ export class PostService {
       created_at: data.created_at,
     };
   }
+
   async addPost(value: DeepPartial<Post>, entityManager?: EntityManager) {
     const postRepository = entityManager
       ? entityManager.getRepository<Post>('post')
@@ -247,5 +248,46 @@ export class PostService {
       user_id: data.user_id,
       is_incognito: data.is_incognito,
     };
+  }
+  async updatePostByUserCreated(
+    condition: object,
+    body: DeepPartial<Post>,
+    entityManager?: EntityManager,
+  ) {
+    const postRepository = entityManager
+      ? entityManager.getRepository<Post>('post')
+      : this.postRepository;
+    return await postRepository.update(condition, body);
+  }
+
+  async handleDeletePost(
+    post_id: number,
+    user_id: string,
+    body: DeepPartial<Post>,
+  ) {
+    const isAccess = await this.checkPost({
+      user_id,
+      post_id,
+      is_deleted: EIsDelete.NOT_DELETE,
+    });
+
+    if (!isAccess) {
+      throw new HttpException(
+        ErrorMessage.DELETE_POST_PERMISSION_DENIED,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    await this.connection.transaction(async (manager) => {
+      await Promise.all([
+        this.updatePostByUserCreated({ post_id, user_id }, body, manager),
+        this.activityService.updateActivity(
+          { post_id, user_id, is_deleted: EIsDelete.NOT_DELETE },
+          { is_deleted: EIsDelete.DELETED },
+          manager,
+        ),
+      ]);
+    });
+    return null;
   }
 }

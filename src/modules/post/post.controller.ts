@@ -6,7 +6,9 @@ import {
   Param,
   ParseIntPipe,
   HttpStatus,
+  Delete,
 } from '@nestjs/common';
+import { EIsDelete } from 'enum';
 import { VAddComment } from 'global/post/dto/addComment.dto';
 import { VCreatePost } from 'global/post/dto/createPost.dto';
 import { UserData } from 'src/core/decorator/user.decorator';
@@ -54,5 +56,21 @@ export class PostController {
     post_id: number,
   ) {
     return await this.postService.createPostLike(userData, post_id);
+  }
+
+  @Delete(':post_id')
+  async deletePost(
+    @UserData() userData: IUserData,
+    @Param(
+      'post_id',
+      new ParseIntPipe({
+        errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE,
+      }),
+    )
+    post_id: number,
+  ) {
+    return await this.postService.handleDeletePost(post_id, userData.user_id, {
+      is_deleted: EIsDelete.DELETED,
+    });
   }
 }
