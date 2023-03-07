@@ -87,4 +87,18 @@ export class PostController {
   ) {
     return await this.postService.deleteLikePost(userData, post_id);
   }
+
+  @Get('/:post_id/comments')
+  async handleGetPostDetail(
+    @UserData() userData: IUserData,
+    @Param(
+      'post_id',
+      new ParseIntPipe({
+        errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE,
+      }),
+    )
+    post_id: number,
+  ) {
+    return await this.postService.getPostComment(post_id, userData.user_id);
+  }
 }

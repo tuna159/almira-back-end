@@ -308,4 +308,109 @@ export class PostService {
       await Promise.all([unlikePost, deleteActivityLike]);
     });
   }
+
+  async getPostComment(post_id: number, user_id?: string) {
+    const [isExist] = await Promise.all([
+      this.checkPost({ post_id, is_deleted: EIsDelete.NOT_DELETE }),
+    ]);
+
+    if (!isExist) {
+      throw new HttpException(
+        ErrorMessage.POST_NOT_EXIST,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const post = await this.getPostDetailByPostId(post_id);
+
+    const like_count = post?.postLikes?.filter(
+      (e) => e?.user?.is_deleted == EIsDelete.NOT_DELETE,
+    )?.length;
+    const commentCount = post?.postComments?.length;
+    const isCommented = post?.postComments
+      .map((e) => e?.user_id)
+      .includes(user_id);
+    const is_liked = post.postLikes.map((e) => e.user_id).includes(user_id);
+    const post_comment = post.postComments.map((e) => {
+      return {
+        post_comment_id: e.post_comment_id,
+        user_data: {
+          user_id: e.user_id,
+          nickname:
+            (e.is_incognito && e.user_id != user_id) ||
+            e.user.is_deleted == EIsDelete.DELETED
+              ? null
+              : e.user.user_name,
+          image: {
+            image_url:
+              (e.is_incognito && e.user_id != user_id) ||
+              e.user.is_deleted == EIsDelete.DELETED
+                ? null
+                : e.user.userDetail.image_url,
+            thumbnail_url:
+              (e.is_incognito && e.user_id != user_id) ||
+              e.user.is_deleted == EIsDelete.DELETED
+                ? null
+                : e.user.userDetail.thumbnail_url,
+          },
+          is_deleted: !!e.user.is_deleted,
+        },
+
+        is_incognito: !!e.is_incognito,
+        created_at: e.created_at,
+      };
+    });
+
+    return {
+      post_id: post.post_id,
+      content: post.content,
+      user_data: {
+        user_id: post.user_id,
+        nickname: post.user.user_name,
+        image: {
+          image_url: post.user.userDetail.image_url,
+          thumbnail_url: post.user.userDetail.thumbnail_url,
+        },
+        is_deleted: !!post.user.is_deleted,
+      },
+      is_incognito: !!post.is_incognito,
+      comment_count: commentCount,
+      is_commented: isCommented,
+      created_at: post.created_at,
+      updated_at: post.updated_at,
+      post_comment: post_comment,
+    };
+  }
+
+  async getPostDetailByPostId(post_id: number) {
+    const sql = this.postRepository
+      .createQueryBuilder('post')
+      .select()
+      .addSelect(['user.user_id', 'user.is_deleted', 'user.user_name'])
+      .addSelect(['userDetail.image_url', 'userDetail.thumbnail_url'])
+      .addSelect(['userComment.user_id', 'userComment.is_deleted'])
+      .addSelect([
+        'userCommentDetail.image_url',
+        'userCommentDetail.thumbnail_url',
+      ])
+      .addSelect(['postLikes.user_id'])
+      .leftJoin('post.user', 'user')
+      .leftJoin('post.postLikes', 'postLikes')
+      .leftJoinAndSelect(
+        'post.postComments',
+        'postComments',
+        'postComments.is_deleted = :is_deleted',
+        { is_deleted: EIsDelete.NOT_DELETE },
+      )
+      .leftJoin('user.userDetail', 'userDetail')
+      .leftJoin('postComments.user', 'userComment')
+      .leftJoin('userComment.userDetail', 'userCommentDetail')
+
+      .where('post.post_id = :post_id', { post_id })
+      .andWhere('post.is_deleted = :is_deleted', {
+        is_deleted: EIsDelete.NOT_DELETE,
+      });
+
+    return await sql.getOne();
+  }
 }
