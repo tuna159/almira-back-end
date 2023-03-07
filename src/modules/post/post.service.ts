@@ -323,14 +323,10 @@ export class PostService {
 
     const post = await this.getPostDetailByPostId(post_id);
 
-    const like_count = post?.postLikes?.filter(
-      (e) => e?.user?.is_deleted == EIsDelete.NOT_DELETE,
-    )?.length;
     const commentCount = post?.postComments?.length;
     const isCommented = post?.postComments
       .map((e) => e?.user_id)
       .includes(user_id);
-    const is_liked = post.postLikes.map((e) => e.user_id).includes(user_id);
     const post_comment = post.postComments.map((e) => {
       return {
         post_comment_id: e.post_comment_id,
@@ -355,7 +351,6 @@ export class PostService {
           },
           is_deleted: !!e.user.is_deleted,
         },
-
         is_incognito: !!e.is_incognito,
         created_at: e.created_at,
       };
