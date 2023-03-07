@@ -23,6 +23,7 @@ import { PostCommentService } from '../post-comment/post-comment.service';
 import { Activity } from 'src/core/database/mysql/entity/activity.entity';
 import { ActivityService } from '../activity/activity.service';
 import { PostLikeService } from '../post-like/post-like.service';
+import { VUpdatePost } from 'global/post/dto/updatePost.dto';
 
 @Injectable()
 export class PostService {
@@ -407,5 +408,41 @@ export class PostService {
       });
 
     return await sql.getOne();
+  }
+
+  async handleUpdatePost(post_id: number, user_id: string, body: VUpdatePost) {
+    const isAccess = await this.checkPost({
+      post_id,
+      is_deleted: EIsDelete.NOT_DELETE,
+    });
+
+    if (!isAccess) {
+      throw new HttpException(
+        ErrorMessage.POST_NOT_EXIST,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    if (isAccess.user_id != user_id) {
+      throw new HttpException(
+        ErrorMessage.UPDATE_POST_PERMISSION_DENIED,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const post = await this.connection.transaction(async (manager) => {
+      const postParams = new Post();
+      postParams.content = body.content;
+      postParams.updated_at = new Date();
+
+      await Promise.all([
+        this.updatePostByUserCreated({ post_id, user_id }, postParams, manager),
+      ]);
+      return postParams;
+    });
+
+    return {
+      updated_at: post.updated_at,
+    };
   }
 }

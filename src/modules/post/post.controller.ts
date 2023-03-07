@@ -7,10 +7,12 @@ import {
   ParseIntPipe,
   HttpStatus,
   Delete,
+  Put,
 } from '@nestjs/common';
 import { EIsDelete } from 'enum';
 import { VAddComment } from 'global/post/dto/addComment.dto';
 import { VCreatePost } from 'global/post/dto/createPost.dto';
+import { VUpdatePost } from 'global/post/dto/updatePost.dto';
 import { UserData } from 'src/core/decorator/user.decorator';
 import { IUserData } from 'src/core/interface/default.interface';
 import { PostService } from './post.service';
@@ -100,5 +102,23 @@ export class PostController {
     post_id: number,
   ) {
     return await this.postService.getPostComment(post_id, userData.user_id);
+  }
+  @Put('/:post_id')
+  async handleUpdatePost(
+    @UserData() userData: IUserData,
+    @Body() body: VUpdatePost,
+    @Param(
+      'post_id',
+      new ParseIntPipe({
+        errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE,
+      }),
+    )
+    post_id: number,
+  ) {
+    return await this.postService.handleUpdatePost(
+      post_id,
+      userData.user_id,
+      body,
+    );
   }
 }
