@@ -290,4 +290,22 @@ export class PostService {
     });
     return null;
   }
+
+  async deleteLikePost(userData: IUserData, post_id: number) {
+    const post = await this.getUserPostedByPostId(post_id);
+
+    await this.connection.transaction(async (manager) => {
+      const [unlikePost, deleteActivityLike] = [
+        await this.postLikeService.deleteLikePost(userData, post_id, manager),
+        await Promise.all([
+          this.activityService.handleDeleteActivityLike(
+            post,
+            userData.user_id,
+            manager,
+          ),
+        ]),
+      ];
+      await Promise.all([unlikePost, deleteActivityLike]);
+    });
+  }
 }

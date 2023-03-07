@@ -5,12 +5,14 @@ import { Activity } from 'src/core/database/mysql/entity/activity.entity';
 import { Post } from 'src/core/database/mysql/entity/post.entity';
 import { EReadActivity } from 'src/core/interface/default.interface';
 import { DeepPartial, EntityManager, Repository } from 'typeorm';
+import { PostLikeService } from '../post-like/post-like.service';
 
 @Injectable()
 export class ActivityService {
   constructor(
     @InjectRepository(Activity)
     private activityRepository: Repository<Activity>,
+    private postLikeService: PostLikeService,
   ) {}
 
   async createActivity(
@@ -86,5 +88,41 @@ export class ActivityService {
       : this.activityRepository;
 
     return await activityRepository.save(value);
+  }
+
+  async handleDeleteActivityLike(
+    post: DeepPartial<Post>,
+    user_id: string,
+    entityManager?: EntityManager,
+  ) {
+    const activityRepository = entityManager
+      ? entityManager.getRepository<Activity>('activity')
+      : this.activityRepository;
+
+    const activityLike = await activityRepository.findOne({
+      user_id: post?.user_id,
+      post_id: post?.post_id,
+      type: EActivityType.LIKE,
+      is_deleted: EIsDelete.NOT_DELETE,
+    });
+
+    if (activityLike) {
+      const postLike = await this.postLikeService.getPostLikeByPostId(
+        post.post_id,
+        entityManager,
+      );
+
+      if (!postLike?.length) {
+        const activityParams = new Activity();
+        activityParams.activity_id = activityLike.activity_id;
+        const activityValue = new Activity();
+        activityValue.is_deleted = EIsDelete.DELETED;
+        return await this.updateActivity(
+          activityParams,
+          activityValue,
+          entityManager,
+        );
+      }
+    }
   }
 }

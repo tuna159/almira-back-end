@@ -73,4 +73,18 @@ export class PostController {
       is_deleted: EIsDelete.DELETED,
     });
   }
+
+  @Delete('/:post_id/likes')
+  async unlikePost(
+    @UserData() userData: IUserData,
+    @Param(
+      'post_id',
+      new ParseIntPipe({
+        errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE,
+      }),
+    )
+    post_id: number,
+  ) {
+    return await this.postService.deleteLikePost(userData, post_id);
+  }
 }

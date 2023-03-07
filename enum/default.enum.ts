@@ -4,3 +4,9 @@ export enum EGender {
   MALE = 1,
   FEMALE = 2,
 }
+
+export enum EActivityType {
+  COMMENT = 0,
+  LIKE_POST = 1,
+  LIKE_COMMENT = 2,
+}
