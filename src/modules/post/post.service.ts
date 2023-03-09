@@ -24,6 +24,7 @@ import { Activity } from 'src/core/database/mysql/entity/activity.entity';
 import { ActivityService } from '../activity/activity.service';
 import { PostLikeService } from '../post-like/post-like.service';
 import { VUpdatePost } from 'global/post/dto/updatePost.dto';
+import moment = require('moment');
 
 @Injectable()
 export class PostService {
@@ -169,6 +170,7 @@ export class PostService {
         ),
       ];
       const activityParamsAR = [];
+
       list.forEach((user_id) => {
         const activityParams = new Activity();
         activityParams.post_id = post_id;
@@ -331,29 +333,21 @@ export class PostService {
     const post_comment = post.postComments.map((e) => {
       return {
         post_comment_id: e.post_comment_id,
+        content: e.content,
         user_data: {
           user_id: e.user_id,
-          nickname:
-            (e.is_incognito && e.user_id != user_id) ||
-            e.user.is_deleted == EIsDelete.DELETED
-              ? null
-              : e.user.user_name,
+          user_name: e.user.user_name,
           image: {
-            image_url:
-              (e.is_incognito && e.user_id != user_id) ||
-              e.user.is_deleted == EIsDelete.DELETED
-                ? null
-                : e.user.userDetail.image_url,
-            thumbnail_url:
-              (e.is_incognito && e.user_id != user_id) ||
-              e.user.is_deleted == EIsDelete.DELETED
-                ? null
-                : e.user.userDetail.thumbnail_url,
+            image_url: e.user.userDetail.image_url,
+            thumbnail_url: e.user.userDetail.thumbnail_url,
           },
           is_deleted: !!e.user.is_deleted,
         },
         is_incognito: !!e.is_incognito,
-        created_at: e.created_at,
+        created_at: moment(
+          JSON.stringify(post?.created_at),
+          'YYYY-MM-DD',
+        ).format('YYYY-MM-DD'),
       };
     });
 
@@ -362,7 +356,7 @@ export class PostService {
       content: post.content,
       user_data: {
         user_id: post.user_id,
-        nickname: post.user.user_name,
+        user_name: post.user.user_name,
         image: {
           image_url: post.user.userDetail.image_url,
           thumbnail_url: post.user.userDetail.thumbnail_url,
@@ -384,7 +378,11 @@ export class PostService {
       .select()
       .addSelect(['user.user_id', 'user.is_deleted', 'user.user_name'])
       .addSelect(['userDetail.image_url', 'userDetail.thumbnail_url'])
-      .addSelect(['userComment.user_id', 'userComment.is_deleted'])
+      .addSelect([
+        'userComment.user_id',
+        'userComment.is_deleted',
+        'userComment.user_name',
+      ])
       .addSelect([
         'userCommentDetail.image_url',
         'userCommentDetail.thumbnail_url',

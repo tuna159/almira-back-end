@@ -30,7 +30,7 @@ import { UserDetailModule } from './modules/user-detail/user-detail.module';
         password: process.env.DB_MYSQL_PASSWORD,
         database: process.env.DB_MYSQL_NAME,
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: true,
+        // synchronize: true,
         autoLoadEntities: true,
         logging: false,
         // logger: new DatabaseMysqlLogger(),
