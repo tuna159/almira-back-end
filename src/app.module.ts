@@ -15,6 +15,7 @@ import { PostCommentModule } from './modules/post-comment/post-comment.module';
 import { ActivityModule } from './modules/activity/activity.module';
 import { PostLikeModule } from './modules/post-like/post-like.module';
 import { UserDetailModule } from './modules/user-detail/user-detail.module';
+import { MeModule } from './modules/me/me.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { UserDetailModule } from './modules/user-detail/user-detail.module';
     ActivityModule,
     PostLikeModule,
     UserDetailModule,
+    MeModule,
   ],
   controllers: [AppController],
   providers: [

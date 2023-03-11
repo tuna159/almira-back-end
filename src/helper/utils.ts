@@ -20,9 +20,6 @@ export function returnPostsData(user_id: string, post: DeepPartial<Post>) {
     user_data: {
       nick_name: post.user.user_name,
       user_id: post.user_id,
-      // post.user_id != user_id || post.user.is_deleted == EIsDelete.DELETED
-      //   ? null
-      //   : post.user_id,
       user_image: {
         image_url: post.user.userDetail.image_url,
         thumbnail_url: post.user.userDetail.thumbnail_url,
@@ -42,8 +39,22 @@ export function returnPostsData(user_id: string, post: DeepPartial<Post>) {
     image: post?.postImage?.map((image) => {
       return {
         image_url: image?.image_url,
-        // title: image?.title,
-        // size: image?.size,
+      };
+    }),
+    created: moment(JSON.stringify(post?.created_at), 'YYYY-MM-DD').format(
+      'YYYY-MM-DD',
+    ),
+    updated: post?.updated_at,
+    is_incognito: !!post?.is_incognito,
+  };
+}
+
+export function returnPostsImage(post: DeepPartial<Post>) {
+  return {
+    post_id: post?.post_id,
+    image: post?.postImage?.map((image) => {
+      return {
+        image_url: image?.image_url,
       };
     }),
     created: moment(JSON.stringify(post?.created_at), 'YYYY-MM-DD').format(
