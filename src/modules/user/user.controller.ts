@@ -1,7 +1,12 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { VLogin } from 'global/user/dto/login.dto';
 import { VSignUp } from 'global/user/dto/signup.dto';
 import { Public } from 'src/core/decorator/public.decorator';
+import { UserData } from 'src/core/decorator/user.decorator';
+import {
+  IPaginationQuery,
+  IUserData,
+} from 'src/core/interface/default.interface';
 import { UserService } from './user.service';
 
 @Controller('user')
@@ -23,5 +28,13 @@ export class UserController {
   @Get('')
   async getUser() {
     return this.userService.getUser();
+  }
+
+  @Get('/search')
+  async getPosts(
+    @UserData() userData: IUserData,
+    @Query() query: IPaginationQuery,
+  ) {
+    return await this.userService.getUserName(userData, query);
   }
 }

@@ -13,3 +13,10 @@ export enum EReadActivity {
   READ = 1,
   UN_READ = 0,
 }
+
+export interface IPaginationQuery {
+  page: number;
+  limit: number;
+  skip?: number;
+  [key: string]: any;
+}

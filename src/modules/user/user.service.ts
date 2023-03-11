@@ -5,6 +5,10 @@ import { VLogin } from 'global/user/dto/login.dto';
 import { VSignUp } from 'global/user/dto/signup.dto';
 import { User } from 'src/core/database/mysql/entity/user.entity';
 import { AuthService } from 'src/core/global/auth/auth.service';
+import {
+  IPaginationQuery,
+  IUserData,
+} from 'src/core/interface/default.interface';
 import { DeepPartial, EntityManager, Repository } from 'typeorm';
 
 @Injectable()
@@ -96,5 +100,40 @@ export class UserService {
       },
       relations: ['userDetail'],
     });
+  }
+
+  async getUserName(
+    userData: IUserData,
+    query: IPaginationQuery,
+    entityManager?: EntityManager,
+  ) {
+    const userRepository = entityManager
+      ? entityManager.getRepository<User>('user')
+      : this.userRepository;
+    let data = [];
+
+    const queryBuilder = userRepository
+      .createQueryBuilder('user')
+      .select()
+      .leftJoinAndSelect('user.userDetail', 'userDetail')
+      .where('user.is_deleted = :is_deleted', {
+        is_deleted: EIsDelete.NOT_DELETE,
+      });
+
+    if (query.search_key && query.search_key != '') {
+      const searchKey = query.search_key.trim().toLowerCase();
+      queryBuilder.andWhere('((LOWER(user.user_name) LIKE :searchKey))', {
+        searchKey: `%${searchKey}%`,
+      });
+    }
+    const [listUser] = await queryBuilder.getManyAndCount();
+    data = listUser.map((user) => {
+      return {
+        user_name: user.user_name,
+        image_url: user.userDetail.image_url,
+      };
+    });
+
+    return data;
   }
 }
