@@ -66,7 +66,8 @@ export class PostService {
       )
       .where('post.is_deleted = :is_deleted', {
         is_deleted: EIsDelete.NOT_DELETE,
-      });
+      })
+      .orderBy('post.created_at', 'DESC');
 
     const [listPosts] = await queryBuilder.getManyAndCount();
 
@@ -97,8 +98,16 @@ export class PostService {
             postImageParam.image_url = image.image_url;
             postImageParams.push(postImageParam);
           });
-          this.postImageService.createPostImage(postImageParams, manager);
         }
+        const result = await Promise.allSettled([
+          this.postImageService.createPostImage(postImageParams, manager),
+        ]);
+
+        if (result.some((r) => r.status === 'rejected'))
+          throw new HttpException(
+            'ErrorMessage.POSTING_FAILED',
+            HttpStatus.BAD_REQUEST,
+          );
 
         return post;
       });
