@@ -21,6 +21,7 @@ import { UserService } from 'src/modules/user/user.service';
 import { IResponseAuth } from './interface';
 import { UserDetail } from 'src/core/database/mysql/entity/userDetail.entity';
 import { UserDetailService } from 'src/modules/user-detail/user-detail.service';
+import { IUserData } from 'src/core/interface/default.interface';
 
 // import admin from 'src/main';
 
@@ -123,6 +124,13 @@ export class AuthService {
     return {
       user_id: user.user_id,
       token: data.token,
+    };
+  }
+
+  async getToken(userData: IUserData) {
+    const user = await this.userService.findUserByUserId(userData.user_id);
+    return {
+      token: user.token,
     };
   }
 }

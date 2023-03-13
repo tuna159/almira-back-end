@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EIsDelete } from 'enum';
+import { ErrorMessage } from 'enum/error';
 import { VLogin } from 'global/user/dto/login.dto';
 import { VSignUp } from 'global/user/dto/signup.dto';
 import { User } from 'src/core/database/mysql/entity/user.entity';
@@ -9,6 +10,7 @@ import {
   IPaginationQuery,
   IUserData,
 } from 'src/core/interface/default.interface';
+import { returnPostsImage } from 'src/helper/utils';
 import { DeepPartial, EntityManager, Repository } from 'typeorm';
 
 @Injectable()
@@ -98,7 +100,7 @@ export class UserService {
         user_id: userId,
         is_deleted: EIsDelete.NOT_DELETE,
       },
-      relations: ['userDetail'],
+      relations: ['userDetail', 'posts'],
     });
   }
 
@@ -135,5 +137,32 @@ export class UserService {
     });
 
     return data;
+  }
+
+  async getUserDetail(userData: IUserData, targetUserId: string) {
+    const user = await this.findUserByUserId(targetUserId);
+
+    if (!user) {
+      throw new HttpException(
+        ErrorMessage.USER_DOES_NOT_EXIST,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const image = user.posts.map((post) => returnPostsImage(post));
+
+    const data = {
+      user_id: user?.user_id,
+      user_name: user?.user_name,
+      avatar: user?.userDetail?.image_url,
+      introduction: user?.userDetail?.introduction,
+      post_count: user.posts.length,
+      image: image,
+    };
+    return data;
+  }
+
+  async getToken(userData: IUserData) {
+    return await this.authService.getToken(userData);
   }
 }
