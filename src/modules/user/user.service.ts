@@ -12,6 +12,7 @@ import {
 } from 'src/core/interface/default.interface';
 import { returnPostsImage } from 'src/helper/utils';
 import { DeepPartial, EntityManager, Repository } from 'typeorm';
+import { FollowingService } from '../following/following.service';
 
 @Injectable()
 export class UserService {
@@ -19,6 +20,7 @@ export class UserService {
     @InjectRepository(User)
     private userRepository: Repository<User>,
     private authService: AuthService,
+    private followingService: FollowingService,
   ) {}
 
   async signup(body: VSignUp) {
@@ -100,7 +102,7 @@ export class UserService {
         user_id: userId,
         is_deleted: EIsDelete.NOT_DELETE,
       },
-      relations: ['userDetail', 'posts'],
+      relations: ['userDetail', 'posts', 'user1s', 'user2s', 'posts.postImage'],
     });
   }
 
@@ -131,6 +133,7 @@ export class UserService {
     const [listUser] = await queryBuilder.getManyAndCount();
     data = listUser.map((user) => {
       return {
+        user_id: user.user_id,
         user_name: user.user_name,
         image_url: user.userDetail.image_url,
       };
@@ -149,7 +152,7 @@ export class UserService {
       );
     }
 
-    const image = user.posts.map((post) => returnPostsImage(post));
+    const post = user.posts.map((post) => returnPostsImage(post));
 
     const data = {
       user_id: user?.user_id,
@@ -157,12 +160,43 @@ export class UserService {
       avatar: user?.userDetail?.image_url,
       introduction: user?.userDetail?.introduction,
       post_count: user.posts.length,
-      image: image,
+      post: post,
+      followers: user.user2s.length,
+      following: user.user1s.length,
+      is_following: user.user2s
+        ?.map((user2s) => user2s.user1_id)
+        .includes(userData.user_id),
     };
     return data;
   }
 
   async getToken(userData: IUserData) {
     return await this.authService.getToken(userData);
+  }
+
+  async followUser(userData: IUserData, user_id: string) {
+    const user = await this.findUserByUserId(user_id);
+
+    if (!user) {
+      throw new HttpException(
+        ErrorMessage.USER_DOES_NOT_EXIST,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    return this.followingService.followUser(userData, user_id);
+  }
+
+  async unFollowUser(userData: IUserData, user_id: string) {
+    const user = await this.findUserByUserId(user_id);
+
+    if (!user) {
+      throw new HttpException(
+        ErrorMessage.USER_DOES_NOT_EXIST,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    return this.followingService.unFollowUser(userData, user_id);
   }
 }

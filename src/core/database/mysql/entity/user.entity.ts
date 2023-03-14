@@ -13,7 +13,7 @@ import { PostLike } from './postLike.entity';
 import { UserBlocking } from './userBlocking.entity';
 import { UserDetail } from './userDetail.entity';
 import { PostGift } from './postGift.entity';
-import { Matching } from './matching.entity';
+import { Following } from './following.entity';
 
 @Entity('user')
 export class User {
@@ -85,9 +85,9 @@ export class User {
   @OneToMany(() => PostGift, (uerPoint) => uerPoint.receiver)
   pointReceived: PostGift[];
 
-  @OneToMany(() => Matching, (matching) => matching.user1)
-  user1s: Matching[];
+  @OneToMany(() => Following, (following) => following.user1)
+  user1s: Following[];
 
-  @OneToMany(() => Matching, (matching) => matching.user2)
-  user2s: Matching[];
+  @OneToMany(() => Following, (following) => following.user2)
+  user2s: Following[];
 }

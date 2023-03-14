@@ -16,6 +16,7 @@ import { ActivityModule } from './modules/activity/activity.module';
 import { PostLikeModule } from './modules/post-like/post-like.module';
 import { UserDetailModule } from './modules/user-detail/user-detail.module';
 import { MeModule } from './modules/me/me.module';
+import { FollowingModule } from './modules/following/following.module';
 
 @Module({
   imports: [
@@ -35,7 +36,7 @@ import { MeModule } from './modules/me/me.module';
         autoLoadEntities: true,
         logging: false,
         // logger: new DatabaseMysqlLogger(),
-        timezone: '+09:00',
+        timezone: '+07:00',
         legacySpatialSupport: false, //fix version mysql 8
       }),
     }),
@@ -47,6 +48,7 @@ import { MeModule } from './modules/me/me.module';
     PostLikeModule,
     UserDetailModule,
     MeModule,
+    FollowingModule,
   ],
   controllers: [AppController],
   providers: [

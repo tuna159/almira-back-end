@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  Delete,
+} from '@nestjs/common';
 import { VLogin } from 'global/user/dto/login.dto';
 import { VSignUp } from 'global/user/dto/signup.dto';
 import { Public } from 'src/core/decorator/public.decorator';
@@ -46,5 +54,15 @@ export class UserController {
   @Get(':user_id')
   async getUserDetail(@UserData() userData: IUserData, @Param() param) {
     return await this.userService.getUserDetail(userData, param.user_id);
+  }
+
+  @Post('/:user_id/follow')
+  async handleFollowUser(@UserData() userData: IUserData, @Param() param) {
+    return await this.userService.followUser(userData, param.user_id);
+  }
+
+  @Delete('/:user_id/unfollow')
+  async handleUnollowUser(@UserData() userData: IUserData, @Param() param) {
+    return await this.userService.unFollowUser(userData, param.user_id);
   }
 }
