@@ -11,3 +11,7 @@ export enum EIsDelete {
   NOT_DELETE = 0,
   DELETED = 1,
 }
+export enum ECommonStatus {
+  NO = 0,
+  YES = 1,
+}

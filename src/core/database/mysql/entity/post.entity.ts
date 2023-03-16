@@ -31,7 +31,7 @@ export class Post {
   @Column({
     name: 'is_incognito',
     type: 'tinyint',
-    default: EIsIncognito.INCOGNITO,
+    default: EIsIncognito.NOT_INCOGNITO,
   })
   is_incognito: number;
 

@@ -3,7 +3,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { EActivityType, EIsDelete, EIsIncognito } from 'enum';
 import { Activity } from 'src/core/database/mysql/entity/activity.entity';
 import { Post } from 'src/core/database/mysql/entity/post.entity';
-import { EReadActivity } from 'src/core/interface/default.interface';
+import { PostLike } from 'src/core/database/mysql/entity/postLike.entity';
+import { User } from 'src/core/database/mysql/entity/user.entity';
+import { UserDetail } from 'src/core/database/mysql/entity/userDetail.entity';
+import {
+  EReadActivity,
+  IPaginationQuery,
+} from 'src/core/interface/default.interface';
+import { returnPagingData } from 'src/helper/utils';
 import { DeepPartial, EntityManager, Repository } from 'typeorm';
 import { PostLikeService } from '../post-like/post-like.service';
 
@@ -124,5 +131,148 @@ export class ActivityService {
         );
       }
     }
+  }
+
+  async getActivityUnread(userId: string, entityManager?: EntityManager) {
+    const activityRepository = entityManager
+      ? entityManager.getRepository<Activity>('activity')
+      : this.activityRepository;
+
+    return await activityRepository.findOne({
+      user_id: userId,
+      is_read: EReadActivity.UN_READ,
+      is_deleted: EIsDelete.NOT_DELETE,
+    });
+  }
+
+  async getActivity(
+    user_id: string,
+    query: IPaginationQuery,
+    entityManager?: EntityManager,
+  ) {
+    const activityRepository = entityManager
+      ? entityManager.getRepository<Activity>('activity')
+      : this.activityRepository;
+
+    const sqlGetActivity = activityRepository
+      .createQueryBuilder('activity')
+      .select()
+      .where('( activity.user_id = :user_id)', { user_id })
+      .andWhere('activity.is_deleted = :is_deleted', {
+        is_deleted: EIsDelete.NOT_DELETE,
+      })
+      .orderBy('activity_date_time', 'DESC')
+      .skip(query.skip)
+      .take(query.take);
+
+    sqlGetActivity
+      .addSelect(
+        '(CASE WHEN activity.type = 1 THEN (SELECT post_like.created_at FROM post_like where post_like.post_id = activity.post_id order by post_like.created_at desc limit 1) ELSE activity.created_at END)',
+        'activity_date_time',
+      )
+      .leftJoinAndMapMany(
+        'activity.post_like',
+        PostLike,
+        'post_like',
+        'activity.post_id = post_like.post_id AND activity.type = 1',
+      );
+
+    sqlGetActivity
+      .addSelect(['post.content', 'post.user_id'])
+      .addSelect(['fromUser.user_id', 'fromUser.user_name'])
+      .addSelect(['userDetail.image_url', 'userDetail.thumbnail_url'])
+      .addSelect(['postImage.image_url'])
+      .leftJoin('activity.post', 'post')
+      .leftJoin('activity.fromUser', 'fromUser')
+      .leftJoin('fromUser.userDetail', 'userDetail')
+      .leftJoin('post.postImage', 'postImage')
+      .leftJoinAndMapOne(
+        'post_like.user',
+        User,
+        'userLiked',
+        'post_like.user_id = userLiked.user_id AND userLiked.is_deleted = :is_deleted',
+        {
+          is_deleted: EIsDelete.NOT_DELETE,
+        },
+      )
+      .leftJoinAndMapOne(
+        'userLiked.userDetail',
+        UserDetail,
+        'userLikeDetail',
+        'userLiked.user_id = userLikeDetail.user_id',
+      );
+
+    const [activity, totalItems]: any = await sqlGetActivity.getManyAndCount();
+
+    const data = [];
+    for (let i = 0; i < activity.length; i++) {
+      const e = activity[i];
+      const image = {
+        image_url: null,
+        thumbnail_url: null,
+      };
+      let text = '';
+      if (e.type == EActivityType.COMMENT) {
+        (image.image_url = e?.fromUser?.userDetail?.image_url),
+          (image.thumbnail_url = e?.fromUser?.userDetail?.thumbnail_url);
+        const user_name = e?.fromUser?.user_name;
+
+        text =
+          user_id == e?.post?.user_id
+            ? `${user_name} commented on your post: ${e?.post?.content}`
+            : `${user_name} commented on a post that you commented on: ${e?.post?.content}`;
+      } else if (e.type == EActivityType.LIKE) {
+        const postLikes = e?.post_like
+          ?.filter((e) => e?.user != null)
+          .sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+
+        const like_count = postLikes.length;
+
+        if (!like_count) continue;
+
+        image.image_url = postLikes[0]?.user?.userDetail?.image_url;
+
+        image.thumbnail_url = postLikes[0]?.user?.userDetail?.thumbnail_url;
+
+        const user1 = postLikes[0]?.user?.user_name;
+        if (like_count === 1) {
+          text = `${user1} likes your post: ${e?.post?.content}`;
+        } else {
+          text = `${user1} and other ${
+            like_count - 1
+          } person(s) like your post: ${e?.post?.content}`;
+        }
+      }
+      if (e.type == EActivityType.LIKE && !e?.post_like?.length) {
+        continue;
+      }
+      data.push({
+        activity_id: e?.activity_id,
+        post_id: e?.post_id,
+        community_id: e?.community_id,
+        image: image,
+        post_image: e?.post?.postImage.map((e2) => {
+          return { image_url: e2.image_url };
+        }),
+        type: e?.type,
+        summary: text,
+        is_incognito: !!e.is_incognito,
+        created_at: e?.date_time,
+      });
+    }
+
+    return returnPagingData(data, totalItems, query);
+  }
+
+  async handleGetActivity(user_id: string, query: IPaginationQuery) {
+    const [has_new_activity, post_activity] = await Promise.all([
+      this.getActivityUnread(user_id),
+      this.getActivity(user_id, query),
+    ]);
+    return {
+      activity_data: post_activity.data,
+      is_last_page: !!post_activity.is_last_page,
+      has_new_activity: !!has_new_activity,
+    };
   }
 }

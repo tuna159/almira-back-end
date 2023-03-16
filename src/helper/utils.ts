@@ -1,5 +1,5 @@
 import * as bcrypt from 'bcrypt';
-import { EIsDelete } from 'enum';
+import { ECommonStatus, EIsDelete } from 'enum';
 import moment = require('moment');
 import { Post } from 'src/core/database/mysql/entity/post.entity';
 import { DeepPartial } from 'typeorm';
@@ -11,6 +11,20 @@ export async function handleBCRYPTHash(text: string) {
 
 export async function handleBCRYPTCompare(text: string, hash: string) {
   return await bcrypt.compare(text, hash);
+}
+
+export function returnPagingData(data: any, totalItems: number, params: any) {
+  return {
+    data,
+    is_last_page:
+      params.pageIndex < Math.ceil(totalItems / params.take)
+        ? !!ECommonStatus.NO
+        : !!ECommonStatus.YES,
+    // totalItems,
+    // pageIndex: params.pageIndex,
+    // totalPages: Math.ceil(totalItems / params.take),
+    // take: params.take,
+  };
 }
 
 export function returnPostsData(user_id: string, post: DeepPartial<Post>) {
