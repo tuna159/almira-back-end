@@ -62,6 +62,13 @@ export class UserService {
     return await userRepository.find();
   }
 
+  async getUserByUserID(condition: object, entityManager?: EntityManager) {
+    const userRepository = entityManager
+      ? entityManager.getRepository<User>('user')
+      : this.userRepository;
+    return await userRepository.findOne(condition);
+  }
+
   async getUserByUserId(userId: string, entityManager?: EntityManager) {
     const userRepository = entityManager
       ? entityManager.getRepository<User>('m_user')

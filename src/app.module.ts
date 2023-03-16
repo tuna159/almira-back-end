@@ -17,6 +17,7 @@ import { PostLikeModule } from './modules/post-like/post-like.module';
 import { UserDetailModule } from './modules/user-detail/user-detail.module';
 import { MeModule } from './modules/me/me.module';
 import { FollowingModule } from './modules/following/following.module';
+import { MessageModule } from './modules/message/message.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { FollowingModule } from './modules/following/following.module';
     UserDetailModule,
     MeModule,
     FollowingModule,
+    MessageModule,
   ],
   controllers: [AppController],
   providers: [
