@@ -2,12 +2,15 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ECommonStatus, EIsDelete } from 'enum';
 import { ErrorMessage } from 'enum/error';
+import { VSendMessage } from 'global/message/dto/send-messages';
 import { Message } from 'src/core/database/mysql/entity/message.entity';
+import { MessageImage } from 'src/core/database/mysql/entity/messageImage.entity';
 import {
   IPaginationQuery,
   IUserData,
 } from 'src/core/interface/default.interface';
-import { Repository } from 'typeorm';
+import { Repository, Connection, DeepPartial, EntityManager } from 'typeorm';
+import { MessageImageService } from '../message-image/message-image.service';
 import { UserService } from '../user/user.service';
 
 @Injectable()
@@ -16,6 +19,8 @@ export class MessageService {
     @InjectRepository(Message)
     private messageRepository: Repository<Message>,
     private userService: UserService,
+    private connection: Connection,
+    private messageImageService: MessageImageService,
   ) {}
 
   async getMessageListByUserId(
@@ -115,6 +120,73 @@ export class MessageService {
       },
       message_data: data,
       is_last_page: is_last_page,
+    };
+  }
+
+  async createNewMessage(
+    value: DeepPartial<Message>,
+    entityManager?: EntityManager,
+  ) {
+    const messageRepository = entityManager
+      ? entityManager.getRepository<Message>('message')
+      : this.messageRepository;
+    return await messageRepository.save(value);
+  }
+
+  async sendMessages(userData: IUserData, body: VSendMessage) {
+    if (!body?.content && !body?.images?.length) {
+      throw new HttpException(
+        ErrorMessage.INVALID_PARAM,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    if (userData.user_id === body?.user_id) {
+      throw new HttpException(
+        ErrorMessage.CANNOT_SEND_TO_MYSELF,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const receiver = await this.userService.getUserByUserId(body?.user_id);
+
+    if (!receiver) {
+      throw new HttpException(
+        ErrorMessage.RECEIVER_DOES_NOT_EXIST,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const message = await this.connection.transaction(async (manager) => {
+      const messageParams = new Message();
+      messageParams.sender_id = userData.user_id;
+      messageParams.receiver_id = body?.user_id;
+      messageParams.content = body?.content ? body?.content : '';
+
+      const message = await this.createNewMessage(messageParams, manager);
+
+      const messageImageParams = [];
+      if (body?.images && body?.images?.length) {
+        body.images.forEach((image) => {
+          const messageImageParam = new MessageImage();
+          messageImageParam.message_id = message.message_id;
+          messageImageParam.image_url = image.image_url;
+
+          messageImageParams.push(messageImageParam);
+        });
+      }
+
+      await this.messageImageService.bulkcreateMessageImage(
+        messageImageParams,
+        manager,
+      );
+
+      return message;
+    });
+
+    return {
+      message_id: message.message_id,
+      images: body.images,
     };
   }
 }

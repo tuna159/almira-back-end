@@ -18,6 +18,7 @@ import { UserDetailModule } from './modules/user-detail/user-detail.module';
 import { MeModule } from './modules/me/me.module';
 import { FollowingModule } from './modules/following/following.module';
 import { MessageModule } from './modules/message/message.module';
+import { MessageImageModule } from './modules/message-image/message-image.module';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { MessageModule } from './modules/message/message.module';
     MeModule,
     FollowingModule,
     MessageModule,
+    MessageImageModule,
   ],
   controllers: [AppController],
   providers: [

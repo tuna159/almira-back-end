@@ -4,11 +4,16 @@ import { MessageController } from './message.controller';
 import { Message } from 'src/core/database/mysql/entity/message.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from '../user/user.module';
+import { MessageImageModule } from '../message-image/message-image.module';
 
 @Module({
   controllers: [MessageController],
   providers: [MessageService],
-  imports: [TypeOrmModule.forFeature([Message]), forwardRef(() => UserModule)],
+  imports: [
+    TypeOrmModule.forFeature([Message]),
+    forwardRef(() => UserModule),
+    MessageImageModule,
+  ],
   exports: [TypeOrmModule, MessageService],
 })
 export class MessageModule {}

@@ -1,4 +1,5 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { VSendMessage } from 'global/message/dto/send-messages';
 import { UserData } from 'src/core/decorator/user.decorator';
 import {
   IPaginationQuery,
@@ -21,5 +22,13 @@ export class MessageController {
       params.user_id,
       query,
     );
+  }
+
+  @Post()
+  async sendMessages(
+    @UserData() userData: IUserData,
+    @Body() body: VSendMessage,
+  ) {
+    return await this.messageService.sendMessages(userData, body);
   }
 }
