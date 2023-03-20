@@ -20,6 +20,7 @@ import { FollowingModule } from './modules/following/following.module';
 import { MessageModule } from './modules/message/message.module';
 import { MessageImageModule } from './modules/message-image/message-image.module';
 import { UserBlockingModule } from './modules/user-blocking/user-blocking.module';
+import { GiftModule } from './modules/gift/gift.module';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { UserBlockingModule } from './modules/user-blocking/user-blocking.module
     MessageModule,
     MessageImageModule,
     UserBlockingModule,
+    GiftModule,
   ],
   controllers: [AppController],
   providers: [
