@@ -11,6 +11,11 @@ import { MessageService } from './message.service';
 export class MessageController {
   constructor(private readonly messageService: MessageService) {}
 
+  @Get()
+  async getMessages(@UserData() userData: IUserData) {
+    return await this.messageService.getMessages(userData);
+  }
+
   @Get('users/:user_id')
   async handleGetMessageList(
     @Query() query: IPaginationQuery,

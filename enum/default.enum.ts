@@ -10,3 +10,18 @@ export enum EActivityType {
   LIKE_POST = 1,
   LIKE_COMMENT = 2,
 }
+
+export enum EReadMessageStatus {
+  UN_READ = 0,
+  READED = 1,
+}
+
+export enum EMessageWho {
+  SENT = 'message_sent',
+  Received = 'message_received',
+}
+
+export enum ELastMessageEmpty {
+  SENT = 'Sent image(s)',
+  RECEIVED = 'Received image(s)',
+}

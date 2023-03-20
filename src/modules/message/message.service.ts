@@ -1,6 +1,11 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ECommonStatus, EIsDelete } from 'enum';
+import {
+  ELastMessageEmpty,
+  EMessageWho,
+  EReadMessageStatus,
+} from 'enum/default.enum';
 import { ErrorMessage } from 'enum/error';
 import { VSendMessage } from 'global/message/dto/send-messages';
 import { Message } from 'src/core/database/mysql/entity/message.entity';
@@ -10,8 +15,10 @@ import {
   IUserData,
 } from 'src/core/interface/default.interface';
 import { Repository, Connection, DeepPartial, EntityManager } from 'typeorm';
+import { getManager } from 'typeorm/globals';
 import { MessageImageService } from '../message-image/message-image.service';
 import { UserService } from '../user/user.service';
+import moment = require('moment');
 
 @Injectable()
 export class MessageService {
@@ -70,7 +77,7 @@ export class MessageService {
       });
 
     sqlMessage
-      .orderBy('message.created_at', 'DESC')
+      .orderBy('message.created_at', 'ASC')
       .skip(query.skip)
       .take(query.limit);
 
@@ -188,5 +195,130 @@ export class MessageService {
       message_id: message.message_id,
       images: body.images,
     };
+  }
+
+  async getMessages(userData: IUserData) {
+    return await this.getLastMessageByUserId(userData);
+  }
+
+  async getLastMessageByUserId(userData: IUserData, is_archives = false) {
+    const manager = getManager();
+    const searchQuery = is_archives ? 'IN' : 'NOT IN';
+
+    const query_select_conversation = `
+            SELECT
+                t1.*,
+                uSender.is_deleted as isDeletedSender,
+                uReceiver.is_deleted as isDeletedReceiver,
+                uSender.user_name as userNameSender, uReceiver.user_name as userNameReceiver,
+                udSender.image_url as image_urludSender, udReceiver.image_url as image_urludReceiver,
+                udSender.thumbnail_url as thumbnail_urludSender, udReceiver.thumbnail_url as thumbnail_urludReceiver
+            FROM message AS t1
+            LEFT JOIN user uSender
+                ON uSender.user_id = t1.sender_id
+            LEFT JOIN user uReceiver
+                ON uReceiver.user_id = t1.receiver_id
+            LEFT JOIN user_detail udSender
+                ON udSender.user_id = t1.sender_id
+            LEFT JOIN user_detail udReceiver
+                ON udReceiver.user_id = t1.receiver_id
+            INNER JOIN(
+                SELECT
+                    LEAST(sender_id, receiver_id) AS sender_id,
+                    GREATEST(sender_id, receiver_id) AS receiver_id,
+                    MAX(message_id) AS max_id
+                FROM message
+                WHERE is_deleted = ${EIsDelete.NOT_DELETE}
+                GROUP BY LEAST(sender_id, receiver_id), GREATEST(sender_id, receiver_id)
+            ) AS t2
+                ON
+                    LEAST(t1.sender_id, t1.receiver_id) = t2.sender_id AND
+                    GREATEST(t1.sender_id, t1.receiver_id) = t2.receiver_id AND
+                    t1.message_id = t2.max_id
+            WHERE
+              (t1.sender_id = ? AND t1.receiver_id) OR
+              (t1.receiver_id = ? AND t1.sender_id)
+                  ORDER BY message_id DESC`;
+    const query_count_unread_message = `
+            SELECT
+                sender_id, count(sender_id) unread
+            FROM message
+            WHERE
+                is_read = ${EReadMessageStatus.UN_READ}
+                AND is_deleted = ${EIsDelete.NOT_DELETE}
+                AND receiver_id = ?
+                AND sender_id != receiver_id
+            GROUP BY sender_id`;
+
+    const [conversation, unread_message] = await Promise.all([
+      manager.query(query_select_conversation, [
+        userData.user_id,
+        userData.user_id,
+      ]),
+      manager.query(query_count_unread_message, [userData.user_id]),
+    ]);
+
+    const data = conversation.map((e) => {
+      const user_id =
+        userData.user_id === e.sender_id ? e.receiver_id : e.sender_id;
+      let unread = 0;
+      for (let i = 0; i < unread_message.length; i++) {
+        const u = unread_message[i];
+        if (u.sender_id === user_id) {
+          unread = parseInt(u.unread);
+          break;
+        }
+      }
+
+      const type =
+        userData.user_id === e.sender_id
+          ? EMessageWho.SENT
+          : EMessageWho.Received;
+
+      let messageEmpty = null;
+
+      if (type === EMessageWho.SENT) {
+        messageEmpty = ELastMessageEmpty.SENT;
+      } else {
+        messageEmpty = ELastMessageEmpty.RECEIVED;
+      }
+
+      const last_message = e.content ? e.content : messageEmpty;
+
+      const is_deleted =
+        userData.user_id === e.sender_id
+          ? !!e.isDeletedReceiver
+          : !!e.isDeletedSender;
+
+      return {
+        type: type,
+        user_id: user_id,
+        user_name: is_deleted
+          ? null
+          : userData.user_id === e.sender_id
+          ? e.userNameReceiver
+          : e.userNameSender,
+        user_image: {
+          image_url: is_deleted
+            ? null
+            : userData.user_id === e.sender_id
+            ? e.image_urludReceiver
+            : e.image_urludSender,
+          thumbnail_url: is_deleted
+            ? null
+            : userData.user_id === e.sender_id
+            ? e.thumbnail_urludReceiver
+            : e.thumbnail_urludSender,
+        },
+        last_message: last_message,
+        unread_message_count: unread,
+        is_deleted: is_deleted,
+        created: moment(JSON.stringify(e?.created_at), 'YYYY-MM-DD').format(
+          'YYYY-MM-DD',
+        ),
+      };
+    });
+
+    return data.sort((a, b) => (a.created < b.created ? 1 : -1));
   }
 }
