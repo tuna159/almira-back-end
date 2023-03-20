@@ -25,6 +25,7 @@ import { ActivityService } from '../activity/activity.service';
 import { PostLikeService } from '../post-like/post-like.service';
 import { VUpdatePost } from 'global/post/dto/updatePost.dto';
 import moment = require('moment');
+import { PostCommentLikeService } from '../post-comment-like/post-comment-like.service';
 
 @Injectable()
 export class PostService {
@@ -37,6 +38,8 @@ export class PostService {
     @Inject(forwardRef(() => ActivityService))
     private activityService: ActivityService,
     private postLikeService: PostLikeService,
+    @Inject(forwardRef(() => PostCommentLikeService))
+    private postCommentLikeService: PostCommentLikeService,
   ) {}
 
   async getPosts(userData: IUserData, entityManager?: EntityManager) {
@@ -450,6 +453,57 @@ export class PostService {
 
     return {
       updated_at: post.updated_at,
+    };
+  }
+
+  async handlePostCommentLikes(
+    userData: IUserData,
+    post_id: number,
+    post_comment_id: number,
+  ) {
+    const [post, comment] = await Promise.all([
+      this.checkPost({ post_id, is_deleted: EIsDelete.NOT_DELETE }),
+      this.postCommentService.checkPostComment({
+        post_id,
+        post_comment_id,
+        is_deleted: EIsDelete.NOT_DELETE,
+      }),
+    ]);
+
+    if (!post) {
+      throw new HttpException(
+        ErrorMessage.POST_DOES_NOT_EXIST,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    if (!comment) {
+      throw new HttpException(
+        ErrorMessage.COMMENT_DOES_NOT_EXIST,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const commentLike = await this.connection.transaction(async (manager) => {
+      const data = await Promise.all([
+        this.postCommentLikeService.handlePostCommentLikes(
+          userData,
+          post_comment_id,
+          manager,
+        ),
+        this.activityService.addActivityLikeComment(
+          post,
+          comment,
+          userData.user_id,
+          manager,
+        ),
+      ]);
+
+      return data[0];
+    });
+
+    return {
+      post_comment_like_id: commentLike.post_comment_like_id,
     };
   }
 }

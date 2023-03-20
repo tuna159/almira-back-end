@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { EActivityType, EIsDelete, EIsIncognito } from 'enum';
 import { Activity } from 'src/core/database/mysql/entity/activity.entity';
 import { Post } from 'src/core/database/mysql/entity/post.entity';
+import { PostComment } from 'src/core/database/mysql/entity/postComment.entity';
 import { PostLike } from 'src/core/database/mysql/entity/postLike.entity';
 import { User } from 'src/core/database/mysql/entity/user.entity';
 import { UserDetail } from 'src/core/database/mysql/entity/userDetail.entity';
@@ -36,6 +37,18 @@ export class ActivityService {
       .into(Activity)
       .values(body)
       .execute();
+  }
+
+  async createActivityHalder(
+    value: DeepPartial<Activity>,
+    entityManager?: EntityManager,
+  ) {
+    const activityRepository = entityManager
+      ? entityManager.getRepository<Activity>('activity')
+      : this.activityRepository;
+
+    await activityRepository.save(value);
+    return null;
   }
 
   async handleAddActivityLike(
@@ -265,14 +278,54 @@ export class ActivityService {
   }
 
   async handleGetActivity(user_id: string, query: IPaginationQuery) {
-    const [has_new_activity, post_activity] = await Promise.all([
+    const [has_new_activity, posactivity] = await Promise.all([
       this.getActivityUnread(user_id),
       this.getActivity(user_id, query),
     ]);
     return {
-      activity_data: post_activity.data,
-      is_last_page: !!post_activity.is_last_page,
+      activity_data: posactivity.data,
+      is_last_page: !!posactivity.is_last_page,
       has_new_activity: !!has_new_activity,
     };
+  }
+
+  async addActivityLikeComment(
+    post: DeepPartial<Post>,
+    comment: DeepPartial<PostComment>,
+    user_id: string,
+    entityManager?: EntityManager,
+  ) {
+    const activityRepository = entityManager
+      ? entityManager.getRepository<Activity>('activity')
+      : this.activityRepository;
+
+    const activityLike = await activityRepository.findOne({
+      user_id: comment?.user_id,
+      post_id: post?.post_id,
+      post_comment_id: comment?.post_comment_id,
+      type: EActivityType.LIKE_COMMENT,
+      is_deleted: EIsDelete.NOT_DELETE,
+    });
+
+    if (activityLike) {
+      return await this.updateActivity(
+        { activity_id: activityLike.activity_id },
+        { is_read: EReadActivity.UN_READ },
+        entityManager,
+      );
+    } else {
+      const activityParams = new Activity();
+      activityParams.post_id = post.post_id;
+      activityParams.post_comment_id = comment.post_comment_id;
+      activityParams.user_id = comment.user_id;
+      activityParams.type = EActivityType.LIKE_COMMENT;
+      activityParams.is_incognito = comment.is_incognito
+        ? EIsIncognito.INCOGNITO
+        : EIsIncognito.NOT_INCOGNITO;
+      activityParams.is_read = EReadActivity.UN_READ;
+      activityParams.date_time = new Date();
+
+      return await this.createActivityHalder(activityParams, entityManager);
+    }
   }
 }

@@ -4,11 +4,13 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Activity } from './activity.entity';
 import { Post } from './post.entity';
+import { PostCommentLike } from './postCommentLike.entity';
 import { User } from './user.entity';
 
 @Entity('post_comment')
@@ -61,4 +63,10 @@ export class PostComment {
 
   @OneToOne(() => Activity, (activity) => activity.postComment)
   activity: Activity;
+
+  @OneToMany(
+    () => PostCommentLike,
+    (postCommentsLike) => postCommentsLike.postComment,
+  )
+  postCommentLikes: PostCommentLike[];
 }

@@ -21,6 +21,7 @@ import { MessageModule } from './modules/message/message.module';
 import { MessageImageModule } from './modules/message-image/message-image.module';
 import { UserBlockingModule } from './modules/user-blocking/user-blocking.module';
 import { GiftModule } from './modules/gift/gift.module';
+import { PostCommentLikeModule } from './modules/post-comment-like/post-comment-like.module';
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { GiftModule } from './modules/gift/gift.module';
     MessageImageModule,
     UserBlockingModule,
     GiftModule,
+    PostCommentLikeModule,
   ],
   controllers: [AppController],
   providers: [

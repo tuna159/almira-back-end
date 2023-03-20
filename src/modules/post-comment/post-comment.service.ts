@@ -33,4 +33,15 @@ export class PostCommentService {
       : this.postCommentRepository;
     return await postCommentRepository.save(value);
   }
+
+  async checkPostComment(
+    condition: DeepPartial<PostComment>,
+    entityManager?: EntityManager,
+  ) {
+    const postCommentRepository = entityManager
+      ? entityManager.getRepository<PostComment>('post_comment')
+      : this.postCommentRepository;
+
+    return await postCommentRepository.findOne(condition);
+  }
 }

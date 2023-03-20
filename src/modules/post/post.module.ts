@@ -7,6 +7,7 @@ import { PostImageModule } from '../post-image/post-image.module';
 import { PostCommentModule } from '../post-comment/post-comment.module';
 import { ActivityModule } from '../activity/activity.module';
 import { PostLikeModule } from '../post-like/post-like.module';
+import { PostCommentLikeModule } from '../post-comment-like/post-comment-like.module';
 
 @Module({
   controllers: [PostController],
@@ -17,6 +18,7 @@ import { PostLikeModule } from '../post-like/post-like.module';
     PostCommentModule,
     forwardRef(() => ActivityModule),
     PostLikeModule,
+    forwardRef(() => PostCommentLikeModule),
   ],
 })
 export class PostModule {}

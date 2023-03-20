@@ -6,6 +6,7 @@ export enum EIsIncognito {
 export enum EActivityType {
   COMMENT = 0,
   LIKE = 1,
+  LIKE_COMMENT = 2,
 }
 export enum EIsDelete {
   NOT_DELETE = 0,
