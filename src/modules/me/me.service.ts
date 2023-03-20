@@ -1,17 +1,22 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EIsDelete } from 'enum';
+import { ErrorMessage } from 'enum/error';
 import { User } from 'src/core/database/mysql/entity/user.entity';
 import { IUserData } from 'src/core/interface/default.interface';
 import { returnPostsImage } from 'src/helper/utils';
 import { EntityManager } from 'typeorm/entity-manager/EntityManager';
 import { Repository } from 'typeorm/repository/Repository';
+import { UserBlockingService } from '../user-blocking/user-blocking.service';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class MeService {
   constructor(
     @InjectRepository(User)
     private meRepository: Repository<User>,
+    private userService: UserService,
+    private userBlockingService: UserBlockingService,
   ) {}
 
   async getMe(userData: IUserData, entityManager?: EntityManager) {
@@ -46,5 +51,33 @@ export class MeService {
       image: image,
     };
     return myUserData;
+  }
+
+  async blockUser(blocked_on_id: string, userData: IUserData) {
+    if (blocked_on_id === userData.user_id) {
+      throw new HttpException(ErrorMessage.NOT_BLOCKED, HttpStatus.BAD_REQUEST);
+    }
+    const isExist = await this.userService.getUserByUserId(blocked_on_id);
+
+    if (!isExist) {
+      throw new HttpException(
+        ErrorMessage.USER_DOES_NOT_EXIST,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const isExistBlocks = await this.userBlockingService.checkBlocking(
+      blocked_on_id,
+      userData.user_id,
+    );
+
+    if (isExistBlocks) {
+      throw new HttpException(
+        ErrorMessage.USER_HAS_BEEN_BLOCKED,
+        HttpStatus.CONFLICT,
+      );
+    }
+    await this.userBlockingService.blockUser(blocked_on_id, userData.user_id);
+    return null;
   }
 }

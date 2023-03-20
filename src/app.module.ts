@@ -19,6 +19,7 @@ import { MeModule } from './modules/me/me.module';
 import { FollowingModule } from './modules/following/following.module';
 import { MessageModule } from './modules/message/message.module';
 import { MessageImageModule } from './modules/message-image/message-image.module';
+import { UserBlockingModule } from './modules/user-blocking/user-blocking.module';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { MessageImageModule } from './modules/message-image/message-image.module
     FollowingModule,
     MessageModule,
     MessageImageModule,
+    UserBlockingModule,
   ],
   controllers: [AppController],
   providers: [

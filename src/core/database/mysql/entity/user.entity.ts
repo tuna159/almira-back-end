@@ -14,6 +14,7 @@ import { UserBlocking } from './userBlocking.entity';
 import { UserDetail } from './userDetail.entity';
 import { PostGift } from './postGift.entity';
 import { Following } from './following.entity';
+import { UserVoucher } from './userVoucher.entity';
 
 @Entity('user')
 export class User {
@@ -90,4 +91,7 @@ export class User {
 
   @OneToMany(() => Following, (following) => following.user2)
   user2s: Following[];
+
+  @OneToMany(() => UserVoucher, (userVoucherId) => userVoucherId.userId)
+  userVoucher: UserVoucher[];
 }
