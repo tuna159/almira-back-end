@@ -25,3 +25,11 @@ export enum ELastMessageEmpty {
   SENT = 'Sent image(s)',
   RECEIVED = 'Received image(s)',
 }
+
+export enum EGiftTypeID {
+  SEND_GIFT = 1,
+}
+
+export enum EPointsAdded {
+  SEND_GIFT = 50,
+}

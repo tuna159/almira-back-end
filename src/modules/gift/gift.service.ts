@@ -16,4 +16,15 @@ export class GiftService {
       : this.giftRepository;
     return await giftRepository.find();
   }
+
+  async getOneGift(gift_id: number, entityManager?: EntityManager) {
+    const giftRepository = entityManager
+      ? entityManager.getRepository<Gift>('gift_type')
+      : this.giftRepository;
+    return await giftRepository.findOne({
+      where: {
+        gift_id: gift_id,
+      },
+    });
+  }
 }

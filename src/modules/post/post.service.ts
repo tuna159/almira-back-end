@@ -26,6 +26,11 @@ import { PostLikeService } from '../post-like/post-like.service';
 import { VUpdatePost } from 'global/post/dto/updatePost.dto';
 import moment = require('moment');
 import { PostCommentLikeService } from '../post-comment-like/post-comment-like.service';
+import { PostGiftService } from '../post-gift/post-gift.service';
+import { PostGift } from 'src/core/database/mysql/entity/postGift.entity';
+import { VSendGift } from 'global/post/dto/sendGift.dto';
+import { GiftService } from '../gift/gift.service';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class PostService {
@@ -40,6 +45,9 @@ export class PostService {
     private postLikeService: PostLikeService,
     @Inject(forwardRef(() => PostCommentLikeService))
     private postCommentLikeService: PostCommentLikeService,
+    private postGiftService: PostGiftService,
+    private giftService: GiftService,
+    private userService: UserService,
   ) {}
 
   async getPosts(userData: IUserData, entityManager?: EntityManager) {
@@ -505,5 +513,69 @@ export class PostService {
     return {
       post_comment_like_id: commentLike.post_comment_like_id,
     };
+  }
+
+  async sendGiftPost(
+    userData: IUserData,
+    post_id: number,
+    body: VSendGift,
+    entityManager?: EntityManager,
+  ) {
+    const post = await this.checkPost({
+      post_id,
+      is_deleted: EIsDelete.NOT_DELETE,
+    });
+
+    if (!post) {
+      throw new HttpException(
+        ErrorMessage.POST_DOES_NOT_EXIST,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    const gift = await this.giftService.getOneGift(body.gift_id);
+
+    if (!gift) {
+      throw new HttpException(
+        ErrorMessage.GIFT_DOES_NOT_EXIST,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const postGiftParam = new PostGift();
+    postGiftParam.sender_id = userData.user_id;
+    postGiftParam.receiver_id = body.user_id;
+    postGiftParam.post_id = post.post_id;
+    postGiftParam.gift_id = gift.gift_id;
+    postGiftParam.points = gift.point;
+    postGiftParam.is_deleted = EIsDelete.NOT_DELETE;
+
+    const data = await this.postGiftService.createUserPoints(postGiftParam);
+
+    const totalPoints =
+      (await this.postGiftService.sumUserPoint(
+        data.receiver_id,
+        entityManager,
+      )) || 0;
+
+    const pointsOfUser = await this.userService.getUserByUserId(data.sender_id);
+
+    if (pointsOfUser.total_points < gift.point) {
+      throw new HttpException(
+        ErrorMessage.YOU_DO_NOT_HAVE_ENOUGH_POINTS,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    await this.userService.updateUser(
+      data.sender_id,
+      { total_points: pointsOfUser.total_points - gift.point },
+      entityManager,
+    );
+
+    await this.userService.updateUser(
+      data.receiver_id,
+      { total_points: totalPoints },
+      entityManager,
+    );
   }
 }

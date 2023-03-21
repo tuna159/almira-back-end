@@ -12,6 +12,7 @@ import {
 import { EIsDelete } from 'enum';
 import { VAddComment } from 'global/post/dto/addComment.dto';
 import { VCreatePost } from 'global/post/dto/createPost.dto';
+import { VSendGift } from 'global/post/dto/sendGift.dto';
 import { VUpdatePost } from 'global/post/dto/updatePost.dto';
 import { UserData } from 'src/core/decorator/user.decorator';
 import { IUserData } from 'src/core/interface/default.interface';
@@ -145,5 +146,20 @@ export class PostController {
       post_id,
       post_comment_id,
     );
+  }
+
+  @Post('/:post_id/sendGift')
+  async sendGiftPost(
+    @UserData() userData: IUserData,
+    @Param(
+      'post_id',
+      new ParseIntPipe({
+        errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE,
+      }),
+    )
+    post_id: number,
+    @Body() body: VSendGift,
+  ) {
+    return await this.postService.sendGiftPost(userData, post_id, body);
   }
 }
