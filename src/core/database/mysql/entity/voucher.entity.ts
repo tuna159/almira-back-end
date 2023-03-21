@@ -8,8 +8,8 @@ export class Voucher {
   @Column({ name: 'code', type: 'varchar', length: 100 })
   code: string;
 
-  @Column({ name: 'expired_time', type: 'varchar', length: 300 })
-  expired_time: string;
+  @Column({ name: 'expired_time', type: 'timestamp' })
+  expired_time: Date;
 
   @Column({ name: 'point', type: 'int' })
   point: number;

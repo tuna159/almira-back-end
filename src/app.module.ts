@@ -23,6 +23,7 @@ import { UserBlockingModule } from './modules/user-blocking/user-blocking.module
 import { GiftModule } from './modules/gift/gift.module';
 import { PostCommentLikeModule } from './modules/post-comment-like/post-comment-like.module';
 import { PostGiftModule } from './modules/post-gift/post-gift.module';
+import { VoucherModule } from './modules/voucher/voucher.module';
 
 @Module({
   imports: [
@@ -38,7 +39,7 @@ import { PostGiftModule } from './modules/post-gift/post-gift.module';
         password: process.env.DB_MYSQL_PASSWORD,
         database: process.env.DB_MYSQL_NAME,
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        // synchronize: true,
+        synchronize: true,
         autoLoadEntities: true,
         logging: false,
         // logger: new DatabaseMysqlLogger(),
@@ -61,6 +62,7 @@ import { PostGiftModule } from './modules/post-gift/post-gift.module';
     GiftModule,
     PostCommentLikeModule,
     PostGiftModule,
+    VoucherModule,
   ],
   controllers: [AppController],
   providers: [
