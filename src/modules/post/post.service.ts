@@ -31,6 +31,8 @@ import { PostGift } from 'src/core/database/mysql/entity/postGift.entity';
 import { VSendGift } from 'global/post/dto/sendGift.dto';
 import { GiftService } from '../gift/gift.service';
 import { UserService } from '../user/user.service';
+import { VReportPostDto } from 'global/post/dto/report-post.dto';
+import { PostReportingService } from '../post-reporting/post-reporting.service';
 
 @Injectable()
 export class PostService {
@@ -48,6 +50,7 @@ export class PostService {
     private postGiftService: PostGiftService,
     private giftService: GiftService,
     private userService: UserService,
+    private postReportingService: PostReportingService,
   ) {}
 
   async getPosts(userData: IUserData, entityManager?: EntityManager) {
@@ -582,6 +585,30 @@ export class PostService {
       data.receiver_id,
       { total_points: totalPoints },
       entityManager,
+    );
+  }
+
+  async handleReportPost(
+    userData: IUserData,
+    post_id: number,
+    body: VReportPostDto,
+  ) {
+    const post = await this.checkPost({
+      post_id,
+      is_deleted: EIsDelete.NOT_DELETE,
+    });
+
+    if (!post) {
+      throw new HttpException(
+        ErrorMessage.POST_DOES_NOT_EXIST,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    return await this.postReportingService.handleReportPost(
+      userData,
+      post_id,
+      body,
     );
   }
 }

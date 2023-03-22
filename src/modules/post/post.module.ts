@@ -11,6 +11,7 @@ import { PostCommentLikeModule } from '../post-comment-like/post-comment-like.mo
 import { PostGiftModule } from '../post-gift/post-gift.module';
 import { GiftModule } from '../gift/gift.module';
 import { UserModule } from '../user/user.module';
+import { PostReportingModule } from '../post-reporting/post-reporting.module';
 
 @Module({
   controllers: [PostController],
@@ -25,6 +26,7 @@ import { UserModule } from '../user/user.module';
     PostGiftModule,
     GiftModule,
     UserModule,
+    PostReportingModule,
   ],
 })
 export class PostModule {}

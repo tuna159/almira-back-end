@@ -25,6 +25,7 @@ import { PostCommentLikeModule } from './modules/post-comment-like/post-comment-
 import { PostGiftModule } from './modules/post-gift/post-gift.module';
 import { VoucherModule } from './modules/voucher/voucher.module';
 import { UserVoucherModule } from './modules/user-voucher/user-voucher.module';
+import { PostReportingModule } from './modules/post-reporting/post-reporting.module';
 
 @Module({
   imports: [
@@ -65,6 +66,7 @@ import { UserVoucherModule } from './modules/user-voucher/user-voucher.module';
     PostGiftModule,
     VoucherModule,
     UserVoucherModule,
+    PostReportingModule,
   ],
   controllers: [AppController],
   providers: [
