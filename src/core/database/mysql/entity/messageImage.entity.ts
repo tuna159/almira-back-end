@@ -34,15 +34,6 @@ export class MessageImage {
   image_url: string | null;
 
   @Column({
-    name: 'thumbnail_url',
-    type: 'varchar',
-    length: 512,
-    default: null,
-    nullable: true,
-  })
-  thumbnail_url: string | null;
-
-  @Column({
     name: 'created_at',
     type: 'timestamp',
     default: () => 'current_timestamp',

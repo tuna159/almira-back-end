@@ -55,9 +55,9 @@ export class MessageService {
       .createQueryBuilder('message')
       .select()
       .addSelect(['sender.user_id'])
-      .addSelect(['senderDetail.image_url', 'senderDetail.thumbnail_url'])
+      .addSelect(['senderDetail.image_url'])
       .addSelect(['receiver.user_id'])
-      .addSelect(['receiverDetail.image_url', 'receiverDetail.thumbnail_url'])
+      .addSelect(['receiverDetail.image_url'])
       .addSelect(['messageImages'])
       .leftJoin('message.sender', 'sender')
       .leftJoin('sender.userDetail', 'senderDetail')
@@ -91,7 +91,6 @@ export class MessageService {
           .map((e) => {
             return {
               image_url: e.image_url,
-              thumbnail_url: e.thumbnail_url,
               sequence_no: e.sequence_no,
             };
           })
@@ -207,8 +206,7 @@ export class MessageService {
                 uSender.is_deleted as isDeletedSender,
                 uReceiver.is_deleted as isDeletedReceiver,
                 uSender.user_name as userNameSender, uReceiver.user_name as userNameReceiver,
-                udSender.image_url as image_urludSender, udReceiver.image_url as image_urludReceiver,
-                udSender.thumbnail_url as thumbnail_urludSender, udReceiver.thumbnail_url as thumbnail_urludReceiver
+                udSender.image_url as image_urludSender, udReceiver.image_url as image_urludReceiver
             FROM message AS t1
             LEFT JOIN user uSender
                 ON uSender.user_id = t1.sender_id
@@ -300,11 +298,6 @@ export class MessageService {
             : userData.user_id === e.sender_id
             ? e.image_urludReceiver
             : e.image_urludSender,
-          thumbnail_url: is_deleted
-            ? null
-            : userData.user_id === e.sender_id
-            ? e.thumbnail_urludReceiver
-            : e.thumbnail_urludSender,
         },
         last_message: last_message,
         unread_message_count: unread,

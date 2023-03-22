@@ -1,4 +1,4 @@
-import { EIsDelete, EIsIncognito } from 'enum';
+import { EIsDelete } from 'enum';
 import {
   Column,
   Entity,
@@ -29,13 +29,6 @@ export class PostComment {
 
   @Column({ name: 'content', type: 'varchar', length: 4096, default: '' })
   content: string;
-
-  @Column({
-    name: 'is_incognito',
-    type: 'tinyint',
-    default: EIsIncognito.NOT_INCOGNITO,
-  })
-  is_incognito: number;
 
   @Column({
     name: 'is_deleted',

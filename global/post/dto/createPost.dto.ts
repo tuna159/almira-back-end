@@ -16,14 +16,12 @@ export class VCreatePost {
   @IsString()
   content: string | null;
 
-  @IsOptional()
   @IsArray()
   @ArrayMaxSize(10)
   @ValidateNested({ each: true })
   @Type(() => VImage)
-  images: VImage[] | null;
+  images: VImage[];
 
-  @IsOptional()
   @IsBoolean()
   is_incognito: boolean | null;
 }

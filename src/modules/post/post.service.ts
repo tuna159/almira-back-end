@@ -171,10 +171,6 @@ export class PostService {
       postCommentParams.post_id = post_id;
       postCommentParams.user_id = userData.user_id;
       postCommentParams.content = body.content;
-      postCommentParams.is_incognito =
-        body.is_incognito === false
-          ? EIsIncognito.NOT_INCOGNITO
-          : EIsIncognito.INCOGNITO;
 
       const postComment = await this.postCommentService.addPostComment(
         postCommentParams,
@@ -201,7 +197,6 @@ export class PostService {
         activityParams.from_user_id = userData.user_id;
         activityParams.post_comment_id = postComment.post_comment_id;
         activityParams.comment = postComment.content;
-        activityParams.is_incognito = postComment.is_incognito;
         activityParams.type = EActivityType.COMMENT;
         activityParams.date_time = new Date();
         activityParamsAR.push(activityParams);
@@ -365,7 +360,6 @@ export class PostService {
           },
           is_deleted: !!e.user.is_deleted,
         },
-        is_incognito: !!e.is_incognito,
         created_at: moment(
           JSON.stringify(post?.created_at),
           'YYYY-MM-DD',
@@ -398,16 +392,13 @@ export class PostService {
       .createQueryBuilder('post')
       .select()
       .addSelect(['user.user_id', 'user.is_deleted', 'user.user_name'])
-      .addSelect(['userDetail.image_url', 'userDetail.thumbnail_url'])
+      .addSelect(['userDetail.image_url'])
       .addSelect([
         'userComment.user_id',
         'userComment.is_deleted',
         'userComment.user_name',
       ])
-      .addSelect([
-        'userCommentDetail.image_url',
-        'userCommentDetail.thumbnail_url',
-      ])
+      .addSelect(['userCommentDetail.image_url'])
       .addSelect(['postLikes.user_id'])
       .leftJoin('post.user', 'user')
       .leftJoin('post.postLikes', 'postLikes')
@@ -452,6 +443,10 @@ export class PostService {
     const post = await this.connection.transaction(async (manager) => {
       const postParams = new Post();
       postParams.content = body.content;
+      postParams.is_incognito =
+        body.is_incognito === false
+          ? EIsIncognito.NOT_INCOGNITO
+          : EIsIncognito.INCOGNITO;
       postParams.updated_at = new Date();
 
       await Promise.all([

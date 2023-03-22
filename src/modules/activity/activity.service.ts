@@ -193,7 +193,7 @@ export class ActivityService {
     sqlGetActivity
       .addSelect(['post.content', 'post.user_id'])
       .addSelect(['fromUser.user_id', 'fromUser.user_name'])
-      .addSelect(['userDetail.image_url', 'userDetail.thumbnail_url'])
+      .addSelect(['userDetail.image_url'])
       .addSelect(['postImage.image_url'])
       .leftJoin('activity.post', 'post')
       .leftJoin('activity.fromUser', 'fromUser')
@@ -222,12 +222,11 @@ export class ActivityService {
       const e = activity[i];
       const image = {
         image_url: null,
-        thumbnail_url: null,
       };
       let text = '';
       if (e.type == EActivityType.COMMENT) {
-        (image.image_url = e?.fromUser?.userDetail?.image_url),
-          (image.thumbnail_url = e?.fromUser?.userDetail?.thumbnail_url);
+        image.image_url = e?.fromUser?.userDetail?.image_url;
+
         const user_name = e?.fromUser?.user_name;
 
         text =
@@ -244,8 +243,6 @@ export class ActivityService {
         if (!like_count) continue;
 
         image.image_url = postLikes[0]?.user?.userDetail?.image_url;
-
-        image.thumbnail_url = postLikes[0]?.user?.userDetail?.thumbnail_url;
 
         const user1 = postLikes[0]?.user?.user_name;
         if (like_count === 1) {
@@ -319,9 +316,7 @@ export class ActivityService {
       activityParams.post_comment_id = comment.post_comment_id;
       activityParams.user_id = comment.user_id;
       activityParams.type = EActivityType.LIKE_COMMENT;
-      activityParams.is_incognito = comment.is_incognito
-        ? EIsIncognito.INCOGNITO
-        : EIsIncognito.NOT_INCOGNITO;
+
       activityParams.is_read = EReadActivity.UN_READ;
       activityParams.date_time = new Date();
 
