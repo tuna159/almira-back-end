@@ -8,6 +8,7 @@ import { returnPostsImage } from 'src/helper/utils';
 import { EntityManager } from 'typeorm/entity-manager/EntityManager';
 import { Repository } from 'typeorm/repository/Repository';
 import { UserBlockingService } from '../user-blocking/user-blocking.service';
+import { UserVoucherService } from '../user-voucher/user-voucher.service';
 import { UserService } from '../user/user.service';
 
 @Injectable()
@@ -17,6 +18,7 @@ export class MeService {
     private meRepository: Repository<User>,
     private userService: UserService,
     private userBlockingService: UserBlockingService,
+    private userVoucherService: UserVoucherService,
   ) {}
 
   async getMe(userData: IUserData, entityManager?: EntityManager) {
@@ -79,5 +81,21 @@ export class MeService {
     }
     await this.userBlockingService.blockUser(blocked_on_id, userData.user_id);
     return null;
+  }
+
+  async redeemVoucher(userData: IUserData, voucher_id: number) {
+    const isExist = await this.userService.getUserByUserId(userData.user_id);
+
+    if (!isExist) {
+      throw new HttpException(
+        ErrorMessage.USER_DOES_NOT_EXIST,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    return await this.userVoucherService.redeemVoucher(
+      userData.user_id,
+      voucher_id,
+    );
   }
 }

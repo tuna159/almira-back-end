@@ -5,10 +5,16 @@ import { User } from 'src/core/database/mysql/entity/user.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from '../user/user.module';
 import { UserBlockingModule } from '../user-blocking/user-blocking.module';
+import { UserVoucherModule } from '../user-voucher/user-voucher.module';
 
 @Module({
   controllers: [MeController],
   providers: [MeService],
-  imports: [TypeOrmModule.forFeature([User]), UserModule, UserBlockingModule],
+  imports: [
+    TypeOrmModule.forFeature([User]),
+    UserModule,
+    UserBlockingModule,
+    UserVoucherModule,
+  ],
 })
 export class MeModule {}

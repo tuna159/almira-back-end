@@ -536,7 +536,15 @@ export class PostService {
 
     if (!gift) {
       throw new HttpException(
-        ErrorMessage.GIFT_DOES_NOT_EXIST,
+        ErrorMessage.PLEASE_CHOOSE_GIFT,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    const user = this.userService.getUserByUserId(post.user_id);
+
+    if (!user) {
+      throw new HttpException(
+        ErrorMessage.CAN_NOT_SEND_GIFT_TO_MY_SELF,
         HttpStatus.BAD_REQUEST,
       );
     }

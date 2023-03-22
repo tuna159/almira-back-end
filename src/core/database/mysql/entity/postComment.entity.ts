@@ -5,7 +5,6 @@ import {
   JoinColumn,
   ManyToOne,
   OneToMany,
-  OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Activity } from './activity.entity';
@@ -61,7 +60,7 @@ export class PostComment {
   @JoinColumn({ name: 'post_id' })
   post: Post;
 
-  @OneToOne(() => Activity, (activity) => activity.postComment)
+  @OneToMany(() => Activity, (activity) => activity.postComment)
   activity: Activity;
 
   @OneToMany(
