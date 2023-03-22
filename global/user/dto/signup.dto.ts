@@ -1,22 +1,4 @@
-import {
-  IsDateString,
-  IsEmail,
-  IsEnum,
-  IsObject,
-  IsOptional,
-  IsString,
-  ValidateNested,
-} from 'class-validator';
-import { Type } from 'class-transformer';
-import { EGender } from 'enum/default.enum';
-
-class VImage {
-  @IsString()
-  image_url: string;
-
-  @IsString()
-  thumbnail_url: string;
-}
+import { IsEmail, IsOptional, IsString } from 'class-validator';
 
 export class VSignUp {
   @IsString()
@@ -28,18 +10,10 @@ export class VSignUp {
   @IsEmail()
   email: string;
 
-  @IsString()
-  phone_number: string;
-
   @IsOptional()
-  @IsObject()
-  @ValidateNested()
-  @Type(() => VImage)
-  image: VImage;
+  @IsString()
+  image_url: string;
 
-  @IsEnum(EGender)
-  gender: EGender;
-
-  @IsDateString()
-  birthdate: Date;
+  @IsString()
+  introduction: string;
 }

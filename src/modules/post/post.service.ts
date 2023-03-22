@@ -359,7 +359,6 @@ export class PostService {
           user_name: e.user.user_name,
           image: {
             image_url: e.user.userDetail.image_url,
-            thumbnail_url: e.user.userDetail.thumbnail_url,
           },
           is_deleted: !!e.user.is_deleted,
         },
@@ -379,7 +378,6 @@ export class PostService {
         user_name: post.user.user_name,
         image: {
           image_url: post.user.userDetail.image_url,
-          thumbnail_url: post.user.userDetail.thumbnail_url,
         },
         is_deleted: !!post.user.is_deleted,
       },

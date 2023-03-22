@@ -118,10 +118,6 @@ export class MessageService {
             targetUser.userDetail && !is_deleted
               ? targetUser.userDetail.image_url
               : null,
-          thumbnail_url:
-            targetUser.userDetail && !is_deleted
-              ? targetUser.userDetail.thumbnail_url
-              : null,
         },
         is_deleted: is_deleted,
       },

@@ -36,7 +36,6 @@ export function returnPostsData(user_id: string, post: DeepPartial<Post>) {
       user_id: post.user_id,
       user_image: {
         image_url: post.user.userDetail.image_url,
-        thumbnail_url: post.user.userDetail.thumbnail_url,
       },
       is_deleted: !!post.user.is_deleted,
     },

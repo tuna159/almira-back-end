@@ -80,10 +80,8 @@ export class AuthService {
       const userDetailParams = new UserDetail();
       userDetailParams.user_id = newUser.user_id;
       userDetailParams.email = body.email;
-      userDetailParams.image_url = body?.image?.image_url;
-      userDetailParams.thumbnail_url = body?.image?.thumbnail_url;
-      userDetailParams.gender = body?.gender;
-      userDetailParams.birthdate = new Date(body?.birthdate);
+      userDetailParams.image_url = body?.image_url;
+      userDetailParams.introduction = body.introduction;
 
       await this.userDetailService.createUserDetail(userDetailParams, manager);
 
