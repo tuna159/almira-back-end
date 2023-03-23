@@ -606,4 +606,56 @@ export class PostService {
       body,
     );
   }
+
+  async handleDeletePostComment(
+    post_id: number,
+    post_comment_id: number,
+    user_id: string,
+    body: DeepPartial<PostComment>,
+  ) {
+    const [post, comment] = await Promise.all([
+      this.checkPost({ post_id, is_deleted: EIsDelete.NOT_DELETE }),
+      this.postCommentService.checkPostComment({
+        post_id,
+        post_comment_id,
+        is_deleted: EIsDelete.NOT_DELETE,
+      }),
+    ]);
+
+    if (!post) {
+      throw new HttpException(
+        ErrorMessage.POST_NOT_EXIST,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    if (!comment) {
+      throw new HttpException(
+        ErrorMessage.COMMENT_NOT_EXIST,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    if (comment?.user_id != user_id) {
+      throw new HttpException(
+        ErrorMessage.DELETE_COMMENT_PERMISSION_DENIED,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    await this.connection.transaction(async (manager) => {
+      await Promise.all([
+        this.postCommentService.updatePostCommentByPostCommentId(
+          post_comment_id,
+          body,
+          manager,
+        ),
+        this.activityService.updateActivity(
+          { post_id, post_comment_id, is_deleted: EIsDelete.NOT_DELETE },
+          { is_deleted: EIsDelete.DELETED },
+          manager,
+        ),
+      ]);
+    });
+  }
 }

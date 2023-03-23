@@ -44,4 +44,20 @@ export class PostCommentService {
 
     return await postCommentRepository.findOne(condition);
   }
+
+  async updatePostCommentByPostCommentId(
+    post_comment_id: number,
+    body: DeepPartial<PostComment>,
+    entityManager?: EntityManager,
+  ) {
+    const postCommentRepository = entityManager
+      ? entityManager.getRepository<PostComment>('post_comment')
+      : this.postCommentRepository;
+    return await postCommentRepository.update(
+      {
+        post_comment_id,
+      },
+      body,
+    );
+  }
 }
