@@ -234,4 +234,29 @@ export class PostController {
       body,
     );
   }
+
+  @Delete('/:post_id/comments/:post_comment_id/likes')
+  async deletePostCommentLikes(
+    @UserData() userData: IUserData,
+    @Param(
+      'post_id',
+      new ParseIntPipe({
+        errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE,
+      }),
+    )
+    post_id: number,
+    @Param(
+      'post_comment_id',
+      new ParseIntPipe({
+        errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE,
+      }),
+    )
+    post_comment_id: number,
+  ) {
+    return await this.postService.deletePostCommentLikes(
+      userData,
+      post_id,
+      post_comment_id,
+    );
+  }
 }

@@ -65,4 +65,15 @@ export class PostCommentLikeService {
       HttpStatus.BAD_REQUEST,
     );
   }
+
+  async getPostLikeCommentByCommentId(
+    post_comment_id: number,
+    entityManager?: EntityManager,
+  ) {
+    const postCommentLikeRepository = entityManager
+      ? entityManager.getRepository<PostCommentLike>('post_comment_like')
+      : this.postCommentLikeRepository;
+
+    return await postCommentLikeRepository.find({ post_comment_id });
+  }
 }

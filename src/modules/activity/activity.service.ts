@@ -13,6 +13,7 @@ import {
 } from 'src/core/interface/default.interface';
 import { returnPagingData } from 'src/helper/utils';
 import { DeepPartial, EntityManager, Repository } from 'typeorm';
+import { PostCommentLikeService } from '../post-comment-like/post-comment-like.service';
 import { PostLikeService } from '../post-like/post-like.service';
 
 @Injectable()
@@ -21,6 +22,7 @@ export class ActivityService {
     @InjectRepository(Activity)
     private activityRepository: Repository<Activity>,
     private postLikeService: PostLikeService,
+    private postCommentLikeService: PostCommentLikeService,
   ) {}
 
   async createActivity(
@@ -321,6 +323,45 @@ export class ActivityService {
       activityParams.date_time = new Date();
 
       return await this.createActivityHalder(activityParams, entityManager);
+    }
+  }
+
+  async handleDeleteActivityLikeComment(
+    post: DeepPartial<Post>,
+    comment: DeepPartial<PostComment>,
+    user_id: string,
+    entityManager?: EntityManager,
+  ) {
+    const activityRepository = entityManager
+      ? entityManager.getRepository<Activity>('activity')
+      : this.activityRepository;
+
+    const activityLikeComment = await activityRepository.findOne({
+      user_id: comment?.user_id,
+      post_id: post?.post_id,
+      post_comment_id: comment?.post_comment_id,
+      type: EActivityType.LIKE_COMMENT,
+      is_deleted: EIsDelete.NOT_DELETE,
+    });
+
+    if (activityLikeComment) {
+      const postCommentLike =
+        await this.postCommentLikeService.getPostLikeCommentByCommentId(
+          comment?.post_comment_id,
+          entityManager,
+        );
+
+      if (!postCommentLike?.length) {
+        const activityParams = new Activity();
+        activityParams.activity_id = activityLikeComment.activity_id;
+        const activityValue = new Activity();
+        activityValue.is_deleted = EIsDelete.DELETED;
+        return await this.updateActivity(
+          activityParams,
+          activityValue,
+          entityManager,
+        );
+      }
     }
   }
 }

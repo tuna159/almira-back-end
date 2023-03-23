@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Activity } from 'src/core/database/mysql/entity/activity.entity';
 import { PostModule } from '../post/post.module';
 import { PostLikeModule } from '../post-like/post-like.module';
+import { PostCommentLikeModule } from '../post-comment-like/post-comment-like.module';
 
 @Module({
   controllers: [ActivityController],
@@ -13,6 +14,7 @@ import { PostLikeModule } from '../post-like/post-like.module';
     TypeOrmModule.forFeature([Activity]),
     forwardRef(() => PostModule),
     PostLikeModule,
+    PostCommentLikeModule,
   ],
   exports: [TypeOrmModule, ActivityService],
 })

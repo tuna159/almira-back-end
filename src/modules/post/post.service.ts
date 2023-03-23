@@ -360,6 +360,9 @@ export class PostService {
           },
           is_deleted: !!e.user.is_deleted,
         },
+        is_liked_comment: e.postCommentLikes
+          .map((postCommentLike) => postCommentLike?.user_id)
+          .includes(user_id),
         created_at: moment(
           JSON.stringify(post?.created_at),
           'YYYY-MM-DD',
@@ -407,6 +410,11 @@ export class PostService {
         'postComments',
         'postComments.is_deleted = :is_deleted',
         { is_deleted: EIsDelete.NOT_DELETE },
+      )
+      .leftJoinAndSelect(
+        'postComments.postCommentLikes',
+        'postCommentLikes',
+        'postCommentLikes.user',
       )
       .leftJoin('user.userDetail', 'userDetail')
       .leftJoin('postComments.user', 'userComment')
@@ -710,5 +718,48 @@ export class PostService {
       ]);
     });
     return { updated_at: post.updated_at };
+  }
+
+  async deletePostCommentLikes(
+    userData: IUserData,
+    post_id: number,
+    post_comment_id: number,
+  ) {
+    const [post, comment] = await Promise.all([
+      this.checkPost({ post_id, is_deleted: EIsDelete.NOT_DELETE }),
+      this.postCommentService.checkPostComment({
+        post_id,
+        post_comment_id,
+        is_deleted: EIsDelete.NOT_DELETE,
+      }),
+    ]);
+
+    if (!post) {
+      throw new HttpException(
+        ErrorMessage.POST_DOES_NOT_EXIST,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    if (!comment) {
+      throw new HttpException(
+        ErrorMessage.COMMENT_DOES_NOT_EXIST,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    await this.connection.transaction(async (manager) => {
+      await this.postCommentLikeService.deletePostCommentLikes(
+        userData,
+        post_comment_id,
+        manager,
+      );
+
+      await this.activityService.handleDeleteActivityLikeComment(
+        post,
+        comment,
+        userData.user_id,
+        manager,
+      );
+    });
   }
 }
