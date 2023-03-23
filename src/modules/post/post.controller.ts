@@ -14,6 +14,7 @@ import { VAddComment } from 'global/post/dto/addComment.dto';
 import { VCreatePost } from 'global/post/dto/createPost.dto';
 import { VReportPostDto } from 'global/post/dto/report-post.dto';
 import { VSendGift } from 'global/post/dto/sendGift.dto';
+import { VUpdateComment } from 'global/post/dto/updateComment.dto';
 import { VUpdatePost } from 'global/post/dto/updatePost.dto';
 import { UserData } from 'src/core/decorator/user.decorator';
 import { IUserData } from 'src/core/interface/default.interface';
@@ -204,6 +205,33 @@ export class PostController {
       {
         is_deleted: EIsDelete.DELETED,
       },
+    );
+  }
+
+  @Put('/:post_id/comments/:post_comment_id')
+  async handleUpdatePostComment(
+    @UserData() userData: IUserData,
+    @Body() body: VUpdateComment,
+    @Param(
+      'post_id',
+      new ParseIntPipe({
+        errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE,
+      }),
+    )
+    post_id: number,
+    @Param(
+      'post_comment_id',
+      new ParseIntPipe({
+        errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE,
+      }),
+    )
+    post_comment_id: number,
+  ) {
+    return await this.postService.handleUpdatePostComment(
+      post_id,
+      post_comment_id,
+      userData.user_id,
+      body,
     );
   }
 }
