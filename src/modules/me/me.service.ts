@@ -2,12 +2,16 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EIsDelete } from 'enum';
 import { ErrorMessage } from 'enum/error';
+import { VUpdateProfile } from 'global/user/dto/update-profile.dto';
 import { User } from 'src/core/database/mysql/entity/user.entity';
+import { UserDetail } from 'src/core/database/mysql/entity/userDetail.entity';
 import { IUserData } from 'src/core/interface/default.interface';
 import { returnPostsImage } from 'src/helper/utils';
+import { Connection } from 'typeorm';
 import { EntityManager } from 'typeorm/entity-manager/EntityManager';
 import { Repository } from 'typeorm/repository/Repository';
 import { UserBlockingService } from '../user-blocking/user-blocking.service';
+import { UserDetailService } from '../user-detail/user-detail.service';
 import { UserVoucherService } from '../user-voucher/user-voucher.service';
 import { UserService } from '../user/user.service';
 
@@ -19,6 +23,8 @@ export class MeService {
     private userService: UserService,
     private userBlockingService: UserBlockingService,
     private userVoucherService: UserVoucherService,
+    private connection: Connection,
+    private userDetailService: UserDetailService,
   ) {}
 
   async getMe(userData: IUserData, entityManager?: EntityManager) {
@@ -97,5 +103,37 @@ export class MeService {
       userData.user_id,
       voucher_id,
     );
+  }
+
+  async updateProfile(userData: IUserData, body: VUpdateProfile) {
+    await this.connection.transaction(async (manager) => {
+      // user table
+      const userParams = new User();
+      userParams.user_name = body.user_name;
+
+      // userDetails table
+      const userDetailParams = new UserDetail();
+      userDetailParams.introduction = body?.introduction;
+
+      userDetailParams.image_url = body?.image_url;
+
+      Object.keys(userDetailParams).forEach(
+        (key) =>
+          userDetailParams[key] === undefined && delete userDetailParams[key],
+      );
+
+      await Promise.all([
+        Object.keys(userDetailParams).length
+          ? this.userDetailService.updateUserDetail(
+              { user_id: userData.user_id },
+              userDetailParams,
+              manager,
+            )
+          : null,
+
+        this.userService.updateUser(userData.user_id, userParams, manager),
+      ]);
+    });
+    return null;
   }
 }

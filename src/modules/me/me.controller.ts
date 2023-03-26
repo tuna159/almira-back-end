@@ -1,6 +1,7 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Put } from '@nestjs/common';
 import { VBlockUser } from 'global/user/dto/blockUser.dto';
 import { VRedeemVoucher } from 'global/user/dto/redeemVoucher.dto';
+import { VUpdateProfile } from 'global/user/dto/update-profile.dto';
 import { UserData } from 'src/core/decorator/user.decorator';
 import { IUserData } from 'src/core/interface/default.interface';
 import { MeService } from './me.service';
@@ -25,5 +26,13 @@ export class MeController {
     @Body() body: VRedeemVoucher,
   ) {
     return await this.meService.redeemVoucher(userData, body.voucher_id);
+  }
+
+  @Put()
+  async updateUserProfile(
+    @UserData() userData: IUserData,
+    @Body() body: VUpdateProfile,
+  ) {
+    return await this.meService.updateProfile(userData, body);
   }
 }
