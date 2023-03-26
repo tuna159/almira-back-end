@@ -20,10 +20,6 @@ export function returnPagingData(data: any, totalItems: number, params: any) {
       params.pageIndex < Math.ceil(totalItems / params.take)
         ? !!ECommonStatus.NO
         : !!ECommonStatus.YES,
-    // totalItems,
-    // pageIndex: params.pageIndex,
-    // totalPages: Math.ceil(totalItems / params.take),
-    // take: params.take,
   };
 }
 

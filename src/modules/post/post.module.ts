@@ -28,5 +28,6 @@ import { PostReportingModule } from '../post-reporting/post-reporting.module';
     UserModule,
     PostReportingModule,
   ],
+  exports: [TypeOrmModule, PostService],
 })
 export class PostModule {}

@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EActivityType, EIsDelete, EIsIncognito } from 'enum';
 import { Activity } from 'src/core/database/mysql/entity/activity.entity';
 import { Post } from 'src/core/database/mysql/entity/post.entity';
 import { PostComment } from 'src/core/database/mysql/entity/postComment.entity';
+import { PostCommentLike } from 'src/core/database/mysql/entity/postCommentLike.entity';
 import { PostLike } from 'src/core/database/mysql/entity/postLike.entity';
 import { User } from 'src/core/database/mysql/entity/user.entity';
 import { UserDetail } from 'src/core/database/mysql/entity/userDetail.entity';
@@ -15,14 +16,19 @@ import { returnPagingData } from 'src/helper/utils';
 import { DeepPartial, EntityManager, Repository } from 'typeorm';
 import { PostCommentLikeService } from '../post-comment-like/post-comment-like.service';
 import { PostLikeService } from '../post-like/post-like.service';
+import { PostService } from '../post/post.service';
+import { UserBlockingService } from '../user-blocking/user-blocking.service';
 
 @Injectable()
 export class ActivityService {
   constructor(
     @InjectRepository(Activity)
     private activityRepository: Repository<Activity>,
-    private postLikeService: PostLikeService,
+    private userBlockingService: UserBlockingService,
     private postCommentLikeService: PostCommentLikeService,
+    private postLikeService: PostLikeService,
+    @Inject(forwardRef(() => PostService))
+    private postService: PostService,
   ) {}
 
   async createActivity(
@@ -169,6 +175,11 @@ export class ActivityService {
       ? entityManager.getRepository<Activity>('activity')
       : this.activityRepository;
 
+    const blockList = await this.userBlockingService.getBlockListUserIdByUserId(
+      user_id,
+      entityManager,
+    );
+
     const sqlGetActivity = activityRepository
       .createQueryBuilder('activity')
       .select()
@@ -178,23 +189,97 @@ export class ActivityService {
       })
       .orderBy('activity_date_time', 'DESC')
       .skip(query.skip)
-      .take(query.take);
+      .take(query.limit);
 
-    sqlGetActivity
-      .addSelect(
-        '(CASE WHEN activity.type = 1 THEN (SELECT post_like.created_at FROM post_like where post_like.post_id = activity.post_id order by post_like.created_at desc limit 1) ELSE activity.created_at END)',
-        'activity_date_time',
-      )
-      .leftJoinAndMapMany(
-        'activity.post_like',
-        PostLike,
-        'post_like',
-        'activity.post_id = post_like.post_id AND activity.type = 1',
-      );
+    if (blockList.length) {
+      let blockListStr = '';
+      for (let i = 0; i < blockList.length; i++) {
+        const e = blockList[i];
+        blockListStr += '"' + e + '"';
+        if (i < blockList.length - 1) {
+          blockListStr += ',';
+        }
+      }
+
+      const postBlock = await this.postService.getPostByUserID(blockList);
+
+      sqlGetActivity
+        .addSelect(
+          `(CASE 
+            WHEN activity.type = 1 THEN 
+              ( SELECT post_like.created_at FROM post_like 
+                WHERE post_like.post_id = activity.post_id AND post_like.user_id NOT IN (${blockListStr}) 
+                ORDER BY post_like.created_at desc limit 1)
+            WHEN activity.type = 2 THEN 
+              ( SELECT post_comment_like.created_at FROM post_comment_like 
+                WHERE post_comment_like.post_comment_id = activity.post_comment_id AND post_comment_like.user_id NOT IN (${blockListStr}) 
+                ORDER BY post_comment_like.created_at desc limit 1)
+            ELSE activity.created_at END)`,
+          'activity_date_time',
+        )
+
+        .andWhere(
+          '(activity.from_user_id NOT IN (:blockList) OR from_user_id IS NULL)',
+          {
+            blockList,
+          },
+        )
+        .andWhere(
+          '(activity.post_id NOT IN (:postBlock) OR activity.post_id IS NULL)',
+          {
+            postBlock: postBlock.map((post) => post.post_id).push(0),
+          },
+        )
+        .leftJoinAndMapMany(
+          'activity.post_like',
+          PostLike,
+          'post_like',
+          'activity.post_id = post_like.post_id AND post_like.user_id NOT IN (:blockList) AND activity.type = 1',
+          { blockList },
+        )
+        .leftJoinAndMapMany(
+          'activity.post_comment_like',
+          PostCommentLike,
+          'post_comment_like',
+          'activity.post_comment_id = post_comment_like.post_comment_id AND post_comment_like.user_id NOT IN (:blockList) AND activity.type = 2',
+          { blockList },
+        );
+    } else {
+      sqlGetActivity
+        .addSelect(
+          `(CASE 
+            WHEN activity.type = 1 THEN 
+              ( SELECT post_like.created_at FROM post_like 
+                WHERE post_like.post_id = activity.post_id 
+                ORDER BY post_like.created_at desc limit 1) 
+            WHEN activity.type = 2 THEN 
+              ( SELECT post_comment_like.created_at FROM post_comment_like 
+                WHERE post_comment_like.post_comment_id = activity.post_comment_id 
+                ORDER BY post_comment_like.created_at desc limit 1) 
+            ELSE activity.created_at END)`,
+          'activity_date_time',
+        )
+        .leftJoinAndMapMany(
+          'activity.post_like',
+          PostLike,
+          'post_like',
+          'activity.post_id = post_like.post_id AND activity.type = 1',
+        )
+        .leftJoinAndMapMany(
+          'activity.post_comment_like',
+          PostCommentLike,
+          'post_comment_like',
+          'activity.post_comment_id = post_comment_like.post_comment_id AND activity.type = 2',
+        );
+    }
 
     sqlGetActivity
       .addSelect(['post.content', 'post.user_id'])
-      .addSelect(['fromUser.user_id', 'fromUser.user_name'])
+      .addSelect([
+        'fromUser.user_id',
+        'fromUser.is_deleted',
+        'fromUser.user_name',
+      ])
       .addSelect(['userDetail.image_url'])
       .addSelect(['postImage.image_url'])
       .leftJoin('activity.post', 'post')
@@ -204,17 +289,26 @@ export class ActivityService {
       .leftJoinAndMapOne(
         'post_like.user',
         User,
-        'userLiked',
-        'post_like.user_id = userLiked.user_id AND userLiked.is_deleted = :is_deleted',
-        {
-          is_deleted: EIsDelete.NOT_DELETE,
-        },
+        'userLikedPost',
+        'post_like.user_id = userLikedPost.user_id ',
       )
       .leftJoinAndMapOne(
-        'userLiked.userDetail',
+        'post_comment_like.user',
+        User,
+        'userLikedComment',
+        'post_comment_like.user_id = userLikedComment.user_id',
+      )
+      .leftJoinAndMapOne(
+        'userLikedComment.userDetail',
+        UserDetail,
+        'userLikeDetail1',
+        'userLikedComment.user_id = userLikeDetail1.user_id',
+      )
+      .leftJoinAndMapOne(
+        'userLikedPost.userDetail',
         UserDetail,
         'userLikeDetail',
-        'userLiked.user_id = userLikeDetail.user_id',
+        'userLikedPost.user_id = userLikeDetail.user_id',
       );
 
     const [activity, totalItems]: any = await sqlGetActivity.getManyAndCount();
@@ -233,8 +327,8 @@ export class ActivityService {
 
         text =
           user_id == e?.post?.user_id
-            ? `${user_name} commented on your post: ${e?.post?.content}`
-            : `${user_name} commented on a post that you commented on: ${e?.post?.content}`;
+            ? `${user_name} commented on your post ${e?.post?.content}`
+            : `${user_name} commented on a post that you commented on ${e?.post?.content}`;
       } else if (e.type == EActivityType.LIKE) {
         const postLikes = e?.post_like
           ?.filter((e) => e?.user != null)
@@ -248,16 +342,46 @@ export class ActivityService {
 
         const user1 = postLikes[0]?.user?.user_name;
         if (like_count === 1) {
-          text = `${user1} likes your post: ${e?.post?.content}`;
+          text = `${user1} likes your post ${e?.post?.content}`;
         } else {
           text = `${user1} and other ${
             like_count - 1
-          } person(s) like your post: ${e?.post?.content}`;
+          } person(s) like your post ${e?.post?.content}`;
+        }
+      } else if (e.type == EActivityType.LIKE_COMMENT) {
+        const postLikeComments = e?.post_comment_like
+          ?.filter((e) => e?.user != null)
+          .sort((a, b) => (a.created < b.created ? 1 : -1));
+
+        image.image_url = postLikeComments[0]?.user?.userDetail?.image_url;
+
+        let user1 = postLikeComments[0]?.user?.user_name;
+        const like_comment_count = postLikeComments.length;
+
+        if (postLikeComments[0]?.user.is_deleted == EIsDelete.DELETED) {
+          text = `Deleted account like your comment ${e?.post?.content}`;
+        } else {
+          if (postLikeComments[0]?.user.is_deleted == EIsDelete.DELETED) {
+            user1 = 'Deleted account';
+          }
+          if (like_comment_count === 1) {
+            text = `${user1} likes your comment ${e?.post?.content}`;
+          } else {
+            text = `${user1} and other ${
+              like_comment_count - 1
+            } person(s) like your comment  ${e?.post?.content}`;
+          }
         }
       }
-      if (e.type == EActivityType.LIKE && !e?.post_like?.length) {
-        continue;
-      }
+      // if (e.type == EActivityType.LIKE && !e?.post_like?.length) {
+      //   continue;
+      // }
+      // if (
+      //   e.type == EActivityType.LIKE_COMMENT &&
+      //   !e?.t_post_comment_like?.length
+      // ) {
+      //   continue;
+      // }
       data.push({
         activity_id: e?.activity_id,
         post_id: e?.post_id,

@@ -33,6 +33,7 @@ import { GiftService } from '../gift/gift.service';
 import { UserService } from '../user/user.service';
 import { VReportPostDto } from 'global/post/dto/report-post.dto';
 import { PostReportingService } from '../post-reporting/post-reporting.service';
+import { In } from 'typeorm/find-options/operator/In';
 
 @Injectable()
 export class PostService {
@@ -760,6 +761,14 @@ export class PostService {
         userData.user_id,
         manager,
       );
+    });
+  }
+
+  async getPostByUserID(user_ids: string[]) {
+    return await this.postRepository.find({
+      where: {
+        user_id: In(user_ids),
+      },
     });
   }
 }
