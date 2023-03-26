@@ -173,6 +173,7 @@ export class UserService {
       is_following: user.user2s
         ?.map((user2s) => user2s.user1_id)
         .includes(userData.user_id),
+      total_points: user.total_points,
     };
     return data;
   }
@@ -205,5 +206,23 @@ export class UserService {
     }
 
     return this.followingService.unFollowUser(userData, user_id);
+  }
+
+  async getUserPoint(userData: IUserData, entityManager?: EntityManager) {
+    const userRepository = entityManager
+      ? entityManager.getRepository<User>('m_user')
+      : this.userRepository;
+
+    const query = userRepository
+      .createQueryBuilder('user')
+      .select('user.total_points')
+      .orderBy('user.total_points', 'DESC');
+
+    const total_points = await query.getMany();
+
+    return {
+      total_points: userData.total_points,
+      total_users: total_points.length,
+    };
   }
 }

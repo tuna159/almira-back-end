@@ -42,8 +42,11 @@ export class AuthService {
   }
 
   async returnResponseAuth(userExist): Promise<IResponseAuth> {
+    const pointData = await this.userService.getUserPoint(userExist);
+
     const payloadToken = {
       user_id: userExist.user_id,
+      total_points: pointData.total_points,
     };
 
     const token = this.jwtService.sign(payloadToken, {
@@ -57,6 +60,7 @@ export class AuthService {
 
     return {
       token,
+      point_data: pointData,
     };
   }
 
@@ -121,6 +125,7 @@ export class AuthService {
     const data = await this.returnResponseAuth(user);
     return {
       user_id: user.user_id,
+      total_point: user.total_points,
       token: data.token,
     };
   }
