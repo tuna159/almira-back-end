@@ -22,6 +22,8 @@ import { IResponseAuth } from './interface';
 import { UserDetail } from 'src/core/database/mysql/entity/userDetail.entity';
 import { UserDetailService } from 'src/modules/user-detail/user-detail.service';
 import { IUserData } from 'src/core/interface/default.interface';
+import { VForgotPassword } from 'global/user/dto/forgotPassword.dto';
+import { VResetPassword } from 'global/user/dto/resetPassword.dto';
 
 // import admin from 'src/main';
 
@@ -86,6 +88,9 @@ export class AuthService {
       userDetailParams.email = body.email;
       userDetailParams.image_url = body?.image_url;
       userDetailParams.introduction = body.introduction;
+      userDetailParams.latitude = body.latitude;
+      userDetailParams.longitude = body.longitude;
+      userDetailParams.phone_number = body.phone_number;
 
       await this.userDetailService.createUserDetail(userDetailParams, manager);
 
@@ -130,10 +135,103 @@ export class AuthService {
     };
   }
 
-  async getToken(userData: IUserData) {
-    const user = await this.userService.findUserByUserId(userData.user_id);
-    return {
-      token: user.token,
-    };
+  async forgotPassword(body: VForgotPassword) {
+    const { phone_number } = body;
+
+    const user = await this.userService.getUserByPhoneNumber(phone_number);
+
+    if (!user) {
+      throw new HttpException(
+        ErrorMessage.USER_DOES_NOT_EXIST,
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    // const validationToken = await this.validationTokenService.create({
+    //   email,
+    //   type: EValidationTokenType.SYSTEM_REQUEST_RESET_PASSWORD,
+    // });
+
+    // await sendEmail({
+    //   to: email,
+    //   title: TemplateForgotPassword.verifiedUrl.title,
+    //   content: format(TemplateForgotPassword.verifiedUrl.content, {
+    //     url: process.env.BASE_URL,
+    //     token: validationToken,
+    //   }),
+    // });
+
+    return true;
   }
+
+  async resetPassword(body: VResetPassword) {
+    const { token, password } = body;
+
+    // const authSecret = this.configService.get(EConfiguration.AUTH_SECRET_KEY);
+
+    // const validated = this.jwtService.verify(token, {
+    //   secret: authSecret,
+    // });
+
+    // const validationToken = await this.validationTokenService.findById(
+    //   validated.id,
+    // );
+
+    // if (!validationToken) {
+    //   throw new HttpException(
+    //     ErrorMessage.VALIDATION_TOKEN_NOT_FOUND,
+    //     HttpStatus.NOT_FOUND,
+    //   );
+    // }
+
+    // const user = await this.userService.getUserByEmail(validationToken.email);
+
+    // if (!user) {
+    //   throw new HttpException(
+    //     ErrorMessage.USER_NOT_FOUND,
+    //     HttpStatus.NOT_FOUND,
+    //   );
+    // }
+
+    // if (validationToken.isActive !== EIsActive.ACTIVE) {
+    //   throw new HttpException(
+    //     ErrorMessage.VALIDATION_TOKEN_IN_ACTIVE,
+    //     HttpStatus.BAD_REQUEST,
+    //   );
+    // }
+
+    // if (
+    //   validationToken.type !==
+    //   EValidationTokenType.SYSTEM_REQUEST_RESET_PASSWORD
+    // ) {
+    //   throw new HttpException(
+    //     ErrorMessage.VALIDATION_TOKEN_INVALID_TYPE,
+    //     HttpStatus.BAD_REQUEST,
+    //   );
+    // }
+
+    // if (new Date(validationToken.expiredTime).getTime() < Date.now()) {
+    //   throw new HttpException(
+    //     ErrorMessage.VALIDATION_TOKEN_EXPIRED,
+    //     HttpStatus.BAD_REQUEST,
+    //   );
+    // }
+
+    // await this.validationTokenService.update(validationToken.id, {
+    //   isActive: EIsActive.INACTIVE,
+    // });
+
+    // await this.userService.updateUser(user.id, {
+    //   password: await handleBCRYPTHash(password),
+    // });
+
+    return true;
+  }
+
+  // async getToken(userData: IUserData) {
+  //   const user = await this.userService.findUserByUserId(userData.user_id);
+  //   return {
+  //     token: user.token,
+  //   };
+  // }
 }

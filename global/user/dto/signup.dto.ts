@@ -1,4 +1,4 @@
-import { IsEmail, IsOptional, IsString } from 'class-validator';
+import { IsEmail, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class VSignUp {
   @IsString()
@@ -16,4 +16,13 @@ export class VSignUp {
 
   @IsString()
   introduction: string;
+
+  @IsString()
+  phone_number: string;
+
+  @IsNumber()
+  latitude: number;
+
+  @IsNumber()
+  longitude: number;
 }

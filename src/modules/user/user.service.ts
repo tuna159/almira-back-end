@@ -2,7 +2,9 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EIsDelete } from 'enum';
 import { ErrorMessage } from 'enum/error';
+import { VForgotPassword } from 'global/user/dto/forgotPassword.dto';
 import { VLogin } from 'global/user/dto/login.dto';
+import { VResetPassword } from 'global/user/dto/resetPassword.dto';
 import { VSignUp } from 'global/user/dto/signup.dto';
 import { User } from 'src/core/database/mysql/entity/user.entity';
 import { AuthService } from 'src/core/global/auth/auth.service';
@@ -31,6 +33,14 @@ export class UserService {
     return await this.authService.login(body);
   }
 
+  async forgotPassword(body: VForgotPassword) {
+    return await this.authService.forgotPassword(body);
+  }
+
+  async resetPassword(body: VResetPassword) {
+    return await this.authService.resetPassword(body);
+  }
+
   async getUserByUserName(user_name: string, entityManager?: EntityManager) {
     const userRepository = entityManager
       ? entityManager.getRepository<User>('user')
@@ -50,6 +60,21 @@ export class UserService {
     return await userRepository.findOne({
       where: {
         email,
+        is_deleted: EIsDelete.NOT_DELETE,
+      },
+    });
+  }
+
+  async getUserByPhoneNumber(
+    phone_number: string,
+    entityManager?: EntityManager,
+  ) {
+    const userRepository = entityManager
+      ? entityManager.getRepository<User>('user')
+      : this.userRepository;
+    return await userRepository.findOne({
+      where: {
+        phone_number,
         is_deleted: EIsDelete.NOT_DELETE,
       },
     });
@@ -178,9 +203,9 @@ export class UserService {
     return data;
   }
 
-  async getToken(userData: IUserData) {
-    return await this.authService.getToken(userData);
-  }
+  // async getToken(userData: IUserData) {
+  //   return await this.authService.getToken(userData);
+  // }
 
   async followUser(userData: IUserData, user_id: string) {
     const user = await this.findUserByUserId(user_id);

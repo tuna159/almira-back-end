@@ -6,8 +6,11 @@ import {
   Post,
   Query,
   Delete,
+  Put,
 } from '@nestjs/common';
+import { VForgotPassword } from 'global/user/dto/forgotPassword.dto';
 import { VLogin } from 'global/user/dto/login.dto';
+import { VResetPassword } from 'global/user/dto/resetPassword.dto';
 import { VSignUp } from 'global/user/dto/signup.dto';
 import { Public } from 'src/core/decorator/public.decorator';
 import { UserData } from 'src/core/decorator/user.decorator';
@@ -46,10 +49,10 @@ export class UserController {
     return await this.userService.getUserName(userData, query);
   }
 
-  @Get('/token')
-  async getToken(@UserData() userData: IUserData) {
-    return await this.userService.getToken(userData);
-  }
+  // @Get('/token')
+  // async getToken(@UserData() userData: IUserData) {
+  //   return await this.userService.getToken(userData);
+  // }
 
   @Get(':user_id')
   async getUserDetail(@UserData() userData: IUserData, @Param() param) {
@@ -64,5 +67,17 @@ export class UserController {
   @Delete('/:user_id/unfollow')
   async handleUnollowUser(@UserData() userData: IUserData, @Param() param) {
     return await this.userService.unFollowUser(userData, param.user_id);
+  }
+
+  @Public()
+  @Post('forgot-password')
+  async forgotPassword(@Body() body: VForgotPassword) {
+    return this.userService.forgotPassword(body);
+  }
+
+  @Public()
+  @Put('reset-password')
+  async resetPassword(@Body() body: VResetPassword) {
+    return this.userService.resetPassword(body);
   }
 }
