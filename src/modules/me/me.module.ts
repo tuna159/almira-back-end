@@ -7,6 +7,7 @@ import { UserModule } from '../user/user.module';
 import { UserBlockingModule } from '../user-blocking/user-blocking.module';
 import { UserVoucherModule } from '../user-voucher/user-voucher.module';
 import { UserDetailModule } from '../user-detail/user-detail.module';
+import { AuthModule } from 'src/core/global/auth/auth.module';
 
 @Module({
   controllers: [MeController],
@@ -17,6 +18,7 @@ import { UserDetailModule } from '../user-detail/user-detail.module';
     UserBlockingModule,
     UserVoucherModule,
     UserDetailModule,
+    AuthModule,
   ],
 })
 export class MeModule {}

@@ -5,6 +5,7 @@ import { VUpdateProfile } from 'global/user/dto/update-profile.dto';
 import { UserData } from 'src/core/decorator/user.decorator';
 import { IUserData } from 'src/core/interface/default.interface';
 import { MeService } from './me.service';
+import { VUpdatePassword } from 'global/user/dto/updatePassword.dto';
 
 @Controller('me')
 export class MeController {
@@ -34,5 +35,18 @@ export class MeController {
     @Body() body: VUpdateProfile,
   ) {
     return await this.meService.updateProfile(userData, body);
+  }
+
+  @Post('/logout')
+  async logout(@UserData() userData: IUserData) {
+    return await this.meService.handleLogout(userData?.token, userData.user_id);
+  }
+
+  @Put('profile/password')
+  async updatePassword(
+    @UserData() userData: IUserData,
+    @Body() body: VUpdatePassword,
+  ) {
+    return this.meService.updateProfilePassword(userData.user_id, body);
   }
 }

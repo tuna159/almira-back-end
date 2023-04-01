@@ -228,10 +228,9 @@ export class AuthService {
     return true;
   }
 
-  // async getToken(userData: IUserData) {
-  //   const user = await this.userService.findUserByUserId(userData.user_id);
-  //   return {
-  //     token: user.token,
-  //   };
-  // }
+  async logout(token: string, userId: string) {
+    this.userService.updateUser(userId, {
+      token: null,
+    });
+  }
 }

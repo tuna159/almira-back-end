@@ -6,7 +6,11 @@ import { VUpdateProfile } from 'global/user/dto/update-profile.dto';
 import { User } from 'src/core/database/mysql/entity/user.entity';
 import { UserDetail } from 'src/core/database/mysql/entity/userDetail.entity';
 import { IUserData } from 'src/core/interface/default.interface';
-import { returnPostsImage } from 'src/helper/utils';
+import {
+  handleBCRYPTCompare,
+  handleBCRYPTHash,
+  returnPostsImage,
+} from 'src/helper/utils';
 import { Connection } from 'typeorm';
 import { EntityManager } from 'typeorm/entity-manager/EntityManager';
 import { Repository } from 'typeorm/repository/Repository';
@@ -14,6 +18,8 @@ import { UserBlockingService } from '../user-blocking/user-blocking.service';
 import { UserDetailService } from '../user-detail/user-detail.service';
 import { UserVoucherService } from '../user-voucher/user-voucher.service';
 import { UserService } from '../user/user.service';
+import { AuthService } from 'src/core/global/auth/auth.service';
+import { VUpdatePassword } from 'global/user/dto/updatePassword.dto';
 
 @Injectable()
 export class MeService {
@@ -25,6 +31,7 @@ export class MeService {
     private userVoucherService: UserVoucherService,
     private connection: Connection,
     private userDetailService: UserDetailService,
+    private authService: AuthService,
   ) {}
 
   async getMe(userData: IUserData, entityManager?: EntityManager) {
@@ -135,5 +142,40 @@ export class MeService {
       ]);
     });
     return null;
+  }
+
+  async handleLogout(token: string, userId: string) {
+    await this.authService.logout(token, userId);
+    return null;
+  }
+
+  async updateProfilePassword(user_id: string, body: VUpdatePassword) {
+    await this.connection.transaction(async (entityManager) => {
+      const user = await this.userService.getUserPasswordById(
+        user_id,
+        entityManager,
+      );
+
+      const isPasswordHash = await handleBCRYPTCompare(
+        body.oldPassword,
+        user.password,
+      );
+
+      if (!isPasswordHash)
+        throw new HttpException(
+          ErrorMessage.PASSWORD_INCORRECT,
+          HttpStatus.BAD_REQUEST,
+        );
+
+      await this.userService.updateUser(
+        user_id,
+        {
+          password: await handleBCRYPTHash(body.newPassword),
+        },
+        entityManager,
+      );
+    });
+
+    return true;
   }
 }

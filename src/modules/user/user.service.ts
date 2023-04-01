@@ -250,4 +250,17 @@ export class UserService {
       total_users: total_points.length,
     };
   }
+
+  async getUserPasswordById(user_id: string, entityManager?: EntityManager) {
+    const userRepository = entityManager
+      ? entityManager.getRepository<User>('user')
+      : this.userRepository;
+    return await userRepository.findOne({
+      select: ['user_id', 'password'],
+      where: {
+        user_id,
+        is_deleted: EIsDelete.NOT_DELETE,
+      },
+    });
+  }
 }
