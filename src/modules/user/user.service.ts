@@ -14,7 +14,7 @@ import {
 } from 'src/core/interface/default.interface';
 import { returnPostsImage } from 'src/helper/utils';
 import { DeepPartial, EntityManager, Repository } from 'typeorm';
-import { FollowingService } from '../following/following.service';
+import { FollowService } from '../follow/follow.service';
 
 @Injectable()
 export class UserService {
@@ -22,7 +22,7 @@ export class UserService {
     @InjectRepository(User)
     private userRepository: Repository<User>,
     private authService: AuthService,
-    private followingService: FollowingService,
+    private followService: FollowService,
   ) {}
 
   async signup(body: VSignUp) {
@@ -217,7 +217,7 @@ export class UserService {
       );
     }
 
-    return this.followingService.followUser(userData, user_id);
+    return this.followService.followUser(userData, user_id);
   }
 
   async unFollowUser(userData: IUserData, user_id: string) {
@@ -230,7 +230,20 @@ export class UserService {
       );
     }
 
-    return this.followingService.unFollowUser(userData, user_id);
+    return this.followService.unFollowUser(userData, user_id);
+  }
+
+  async unFollowerUser(userData: IUserData, user_id: string) {
+    const user = await this.findUserByUserId(user_id);
+
+    if (!user) {
+      throw new HttpException(
+        ErrorMessage.USER_DOES_NOT_EXIST,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    return this.followService.unFollowerUser(userData, user_id);
   }
 
   async getUserPoint(userData: IUserData, entityManager?: EntityManager) {

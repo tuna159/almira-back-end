@@ -69,6 +69,11 @@ export class UserController {
     return await this.userService.unFollowUser(userData, param.user_id);
   }
 
+  @Delete('/:user_id/unfollower')
+  async handleUnollowerUser(@UserData() userData: IUserData, @Param() param) {
+    return await this.userService.unFollowerUser(userData, param.user_id);
+  }
+
   @Public()
   @Post('forgot-password')
   async forgotPassword(@Body() body: VForgotPassword) {

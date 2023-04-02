@@ -4,7 +4,7 @@ import { UserController } from './user.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from 'src/core/database/mysql/entity/user.entity';
 import { AuthModule } from 'src/core/global/auth/auth.module';
-import { FollowingModule } from '../following/following.module';
+import { FollowingModule } from '../follow/follow.module';
 
 @Module({
   controllers: [UserController],

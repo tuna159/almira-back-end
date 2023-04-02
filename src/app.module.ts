@@ -16,7 +16,7 @@ import { ActivityModule } from './modules/activity/activity.module';
 import { PostLikeModule } from './modules/post-like/post-like.module';
 import { UserDetailModule } from './modules/user-detail/user-detail.module';
 import { MeModule } from './modules/me/me.module';
-import { FollowingModule } from './modules/following/following.module';
+import { FollowingModule } from './modules/follow/follow.module';
 import { MessageModule } from './modules/message/message.module';
 import { MessageImageModule } from './modules/message-image/message-image.module';
 import { UserBlockingModule } from './modules/user-blocking/user-blocking.module';
