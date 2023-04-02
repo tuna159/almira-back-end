@@ -136,7 +136,7 @@ export class MessageService {
   }
 
   async sendMessages(userData: IUserData, body: VSendMessage) {
-    if (!body?.content && !body?.images?.length) {
+    if (!body?.content && !body?.image_url) {
       throw new HttpException(
         ErrorMessage.INVALID_PARAM,
         HttpStatus.BAD_REQUEST,
@@ -168,14 +168,12 @@ export class MessageService {
       const message = await this.createNewMessage(messageParams, manager);
 
       const messageImageParams = [];
-      if (body?.images && body?.images?.length) {
-        body.images.forEach((image) => {
-          const messageImageParam = new MessageImage();
-          messageImageParam.message_id = message.message_id;
-          messageImageParam.image_url = image.image_url;
+      if (body?.image_url) {
+        const messageImageParam = new MessageImage();
+        messageImageParam.message_id = message.message_id;
+        messageImageParam.image_url = body.image_url;
 
-          messageImageParams.push(messageImageParam);
-        });
+        messageImageParams.push(messageImageParam);
       }
 
       await this.messageImageService.bulkcreateMessageImage(
@@ -188,7 +186,7 @@ export class MessageService {
 
     return {
       message_id: message.message_id,
-      images: body.images,
+      images: body.image_url,
     };
   }
 

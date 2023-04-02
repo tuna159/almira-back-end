@@ -1,14 +1,4 @@
-import { Type } from 'class-transformer';
-import {
-  ArrayMaxSize,
-  IsArray,
-  IsOptional,
-  IsString,
-  MaxLength,
-  MinLength,
-  ValidateNested,
-} from 'class-validator';
-import { VImage } from 'global/post/dto/image.dto';
+import { IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 
 export class VSendMessage {
   @IsString()
@@ -21,9 +11,7 @@ export class VSendMessage {
   content: string | null;
 
   @IsOptional()
-  @IsArray()
-  @ArrayMaxSize(10)
-  @ValidateNested({ each: true })
-  @Type(() => VImage)
-  images: VImage[] | null;
+  @IsString()
+  @MaxLength(512)
+  image_url: string;
 }
