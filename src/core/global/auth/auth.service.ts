@@ -38,7 +38,6 @@ export class AuthService {
     private userDetailService: UserDetailService,
     public jwtService: JwtService,
     private connection: Connection,
-    private readonly twilioClient: Twilio,
   ) {}
 
   async getUserById(user_id: string) {
@@ -154,17 +153,17 @@ export class AuthService {
     //   type: EValidationTokenType.SYSTEM_REQUEST_RESET_PASSWORD,
     // });
 
-    try {
-      const message = await this.twilioClient.messages.create({
-        body: 'Hello from Twilio',
-        from: 'your_twilio_phone_number',
-        to: 'recipient_phone_number',
-      });
+    // try {
+    //   const message = await this.twilioClient.messages.create({
+    //     body: 'Hello from Twilio',
+    //     from: 'your_twilio_phone_number',
+    //     to: 'recipient_phone_number',
+    //   });
 
-      console.log(`SMS Message Sent - Sid: ${message.sid}`);
-    } catch (error) {
-      console.error(`Error sending SMS Message - ${error}`);
-    }
+    //   console.log(`SMS Message Sent - Sid: ${message.sid}`);
+    // } catch (error) {
+    //   console.error(`Error sending SMS Message - ${error}`);
+    // }
 
     // await sendEmail({
     //   to: email,
