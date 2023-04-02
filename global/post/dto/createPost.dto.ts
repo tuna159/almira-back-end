@@ -7,8 +7,11 @@ import {
   IsArray,
   ArrayMaxSize,
   ValidateNested,
+  IsNumber,
+  IsEnum,
 } from 'class-validator';
 import { VImage } from './image.dto';
+import { EPostType } from 'enum';
 
 export class VCreatePost {
   @IsOptional()
@@ -24,4 +27,8 @@ export class VCreatePost {
 
   @IsBoolean()
   is_incognito: boolean | null;
+
+  @IsNumber()
+  @IsEnum(EPostType)
+  post_type: EPostType;
 }

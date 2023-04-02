@@ -24,6 +24,7 @@ import { UserDetailService } from 'src/modules/user-detail/user-detail.service';
 import { IUserData } from 'src/core/interface/default.interface';
 import { VForgotPassword } from 'global/user/dto/forgotPassword.dto';
 import { VResetPassword } from 'global/user/dto/resetPassword.dto';
+import { Twilio } from 'twilio';
 
 // import admin from 'src/main';
 
@@ -37,6 +38,7 @@ export class AuthService {
     private userDetailService: UserDetailService,
     public jwtService: JwtService,
     private connection: Connection,
+    private readonly twilioClient: Twilio,
   ) {}
 
   async getUserById(user_id: string) {
@@ -151,6 +153,18 @@ export class AuthService {
     //   email,
     //   type: EValidationTokenType.SYSTEM_REQUEST_RESET_PASSWORD,
     // });
+
+    try {
+      const message = await this.twilioClient.messages.create({
+        body: 'Hello from Twilio',
+        from: 'your_twilio_phone_number',
+        to: 'recipient_phone_number',
+      });
+
+      console.log(`SMS Message Sent - Sid: ${message.sid}`);
+    } catch (error) {
+      console.error(`Error sending SMS Message - ${error}`);
+    }
 
     // await sendEmail({
     //   to: email,

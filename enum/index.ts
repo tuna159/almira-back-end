@@ -16,3 +16,9 @@ export enum ECommonStatus {
   NO = 0,
   YES = 1,
 }
+
+export enum EPostType {
+  PUBLIC = 0,
+  FRIEND = 1,
+  PRIVATE = 2,
+}

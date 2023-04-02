@@ -1,4 +1,4 @@
-import { EIsDelete, EIsIncognito } from 'enum';
+import { EIsDelete, EIsIncognito, EPostType } from 'enum';
 import {
   Column,
   Entity,
@@ -34,6 +34,13 @@ export class Post {
     default: EIsIncognito.NOT_INCOGNITO,
   })
   is_incognito: number;
+
+  @Column({
+    name: 'post_type',
+    type: 'tinyint',
+    default: EPostType.PUBLIC,
+  })
+  post_type: number;
 
   @Column({
     name: 'is_deleted',
