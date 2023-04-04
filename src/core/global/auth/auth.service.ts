@@ -21,10 +21,10 @@ import { UserService } from 'src/modules/user/user.service';
 import { IResponseAuth } from './interface';
 import { UserDetail } from 'src/core/database/mysql/entity/userDetail.entity';
 import { UserDetailService } from 'src/modules/user-detail/user-detail.service';
-import { IUserData } from 'src/core/interface/default.interface';
 import { VForgotPassword } from 'global/user/dto/forgotPassword.dto';
 import { VResetPassword } from 'global/user/dto/resetPassword.dto';
-import { Twilio } from 'twilio';
+import sendOTP from 'src/helper/sendOTP';
+import { VVerify } from 'global/user/dto/verifyPassword.dto';
 
 // import admin from 'src/main';
 
@@ -80,6 +80,7 @@ export class AuthService {
     const userParams = new User();
     userParams.user_name = body.username;
     userParams.password = await handleBCRYPTHash(body.password);
+    userParams.phone_number = body.phone_number;
     userParams.is_deleted = EIsDelete.NOT_DELETE;
     const user = await this.connection.transaction(async (manager) => {
       const newUser = await this.userService.createUser(userParams, manager);
@@ -91,7 +92,6 @@ export class AuthService {
       userDetailParams.introduction = body.introduction;
       userDetailParams.latitude = body.latitude;
       userDetailParams.longitude = body.longitude;
-      userDetailParams.phone_number = body.phone_number;
 
       await this.userDetailService.createUserDetail(userDetailParams, manager);
 
@@ -148,97 +148,57 @@ export class AuthService {
       );
     }
 
-    // const validationToken = await this.validationTokenService.create({
-    //   email,
-    //   type: EValidationTokenType.SYSTEM_REQUEST_RESET_PASSWORD,
-    // });
+    const otp = Math.floor(Math.random() * 90000) + 1000;
 
-    // try {
-    //   const message = await this.twilioClient.messages.create({
-    //     body: 'Hello from Twilio',
-    //     from: 'your_twilio_phone_number',
-    //     to: 'recipient_phone_number',
-    //   });
+    sendOTP(body.phone_number, otp);
 
-    //   console.log(`SMS Message Sent - Sid: ${message.sid}`);
-    // } catch (error) {
-    //   console.error(`Error sending SMS Message - ${error}`);
-    // }
-
-    // await sendEmail({
-    //   to: email,
-    //   title: TemplateForgotPassword.verifiedUrl.title,
-    //   content: format(TemplateForgotPassword.verifiedUrl.content, {
-    //     url: process.env.BASE_URL,
-    //     token: validationToken,
-    //   }),
-    // });
+    await this.userService.updateUserByPhoneNumber(body.phone_number, {
+      OTP: otp,
+    });
 
     return true;
   }
 
+  async verifyPassword(body: VVerify) {
+    const otpUser = await this.userService.getUserByOtp(body.OTP);
+
+    if (!otpUser) {
+      throw new HttpException(ErrorMessage.OTP_INCORECT, HttpStatus.NOT_FOUND);
+    }
+
+    if (otpUser.OTP == body.OTP) {
+      await this.userService.updateOTP(body.OTP, {
+        OTP: null,
+      });
+    }
+
+    return {
+      user_id: otpUser.user_id,
+    };
+  }
+
   async resetPassword(body: VResetPassword) {
-    const { token, password } = body;
+    const { user_id, password } = body;
 
-    // const authSecret = this.configService.get(EConfiguration.AUTH_SECRET_KEY);
+    const user = await this.userService.getUserByUserID({ user_id: user_id });
 
-    // const validated = this.jwtService.verify(token, {
-    //   secret: authSecret,
-    // });
+    if (!user) {
+      throw new HttpException(
+        ErrorMessage.USER_DOES_NOT_EXIST,
+        HttpStatus.NOT_FOUND,
+      );
+    }
 
-    // const validationToken = await this.validationTokenService.findById(
-    //   validated.id,
-    // );
+    await this.userService.updateUser(user_id, {
+      password: await handleBCRYPTHash(password),
+    });
 
-    // if (!validationToken) {
-    //   throw new HttpException(
-    //     ErrorMessage.VALIDATION_TOKEN_NOT_FOUND,
-    //     HttpStatus.NOT_FOUND,
-    //   );
-    // }
-
-    // const user = await this.userService.getUserByEmail(validationToken.email);
-
-    // if (!user) {
-    //   throw new HttpException(
-    //     ErrorMessage.USER_NOT_FOUND,
-    //     HttpStatus.NOT_FOUND,
-    //   );
-    // }
-
-    // if (validationToken.isActive !== EIsActive.ACTIVE) {
-    //   throw new HttpException(
-    //     ErrorMessage.VALIDATION_TOKEN_IN_ACTIVE,
-    //     HttpStatus.BAD_REQUEST,
-    //   );
-    // }
-
-    // if (
-    //   validationToken.type !==
-    //   EValidationTokenType.SYSTEM_REQUEST_RESET_PASSWORD
-    // ) {
-    //   throw new HttpException(
-    //     ErrorMessage.VALIDATION_TOKEN_INVALID_TYPE,
-    //     HttpStatus.BAD_REQUEST,
-    //   );
-    // }
-
-    // if (new Date(validationToken.expiredTime).getTime() < Date.now()) {
-    //   throw new HttpException(
-    //     ErrorMessage.VALIDATION_TOKEN_EXPIRED,
-    //     HttpStatus.BAD_REQUEST,
-    //   );
-    // }
-
-    // await this.validationTokenService.update(validationToken.id, {
-    //   isActive: EIsActive.INACTIVE,
-    // });
-
-    // await this.userService.updateUser(user.id, {
-    //   password: await handleBCRYPTHash(password),
-    // });
-
-    return true;
+    const data = await this.returnResponseAuth(user);
+    return {
+      user_id: user.user_id,
+      total_point: user.total_points,
+      token: data.token,
+    };
   }
 
   async logout(token: string, userId: string) {

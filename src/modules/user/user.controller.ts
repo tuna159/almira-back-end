@@ -19,6 +19,7 @@ import {
   IUserData,
 } from 'src/core/interface/default.interface';
 import { UserService } from './user.service';
+import { VVerify } from 'global/user/dto/verifyPassword.dto';
 
 @Controller('user')
 export class UserController {
@@ -78,6 +79,12 @@ export class UserController {
   @Post('forgot-password')
   async forgotPassword(@Body() body: VForgotPassword) {
     return this.userService.forgotPassword(body);
+  }
+
+  @Public()
+  @Post('verify')
+  async verifyPassword(@Body() body: VVerify) {
+    return this.userService.verifyPassword(body);
   }
 
   @Public()

@@ -21,9 +21,6 @@ export class UserDetail {
   @Column({ name: 'longitude', type: 'float', default: null })
   longitude: number;
 
-  @Column({ name: 'phone_number', type: 'varchar', length: 65, default: null })
-  phone_number: string;
-
   // @Column({ name: 'location', type: 'point', default: null, nullable: true })
   // location: string;
 

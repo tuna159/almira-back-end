@@ -9,5 +9,5 @@ export class VResetPassword {
 
   @IsString()
   @IsNotEmpty()
-  token: string;
+  user_id: string;
 }

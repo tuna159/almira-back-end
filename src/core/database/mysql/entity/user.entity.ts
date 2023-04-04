@@ -25,6 +25,9 @@ export class User {
   @Column({ name: 'user_name', type: 'varchar', length: 255, default: null })
   user_name: string;
 
+  @Column({ name: 'phone_number', type: 'varchar', length: 65, default: null })
+  phone_number: string;
+
   @Column({ name: 'password', type: 'varchar', length: 255, default: null })
   password: string;
 
@@ -42,6 +45,9 @@ export class User {
 
   @Column({ name: 'total_points', type: 'int', default: 0 })
   total_points: number;
+
+  @Column({ name: 'OTP', type: 'int', default: null })
+  OTP: number;
 
   @Column({
     name: 'created_at',

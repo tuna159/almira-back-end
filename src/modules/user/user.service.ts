@@ -15,6 +15,7 @@ import {
 import { returnPostsImage } from 'src/helper/utils';
 import { DeepPartial, EntityManager, Repository } from 'typeorm';
 import { FollowService } from '../follow/follow.service';
+import { VVerify } from 'global/user/dto/verifyPassword.dto';
 
 @Injectable()
 export class UserService {
@@ -41,6 +42,10 @@ export class UserService {
     return await this.authService.resetPassword(body);
   }
 
+  async verifyPassword(body: VVerify) {
+    return await this.authService.verifyPassword(body);
+  }
+
   async getUserByUserName(user_name: string, entityManager?: EntityManager) {
     const userRepository = entityManager
       ? entityManager.getRepository<User>('user')
@@ -65,6 +70,18 @@ export class UserService {
     });
   }
 
+  async getUserByOtp(otp: number, entityManager?: EntityManager) {
+    const userRepository = entityManager
+      ? entityManager.getRepository<User>('user')
+      : this.userRepository;
+    return await userRepository.findOne({
+      where: {
+        OTP: otp,
+        is_deleted: EIsDelete.NOT_DELETE,
+      },
+    });
+  }
+
   async getUserByPhoneNumber(
     phone_number: string,
     entityManager?: EntityManager,
@@ -72,9 +89,10 @@ export class UserService {
     const userRepository = entityManager
       ? entityManager.getRepository<User>('user')
       : this.userRepository;
+
     return await userRepository.findOne({
       where: {
-        phone_number,
+        phone_number: phone_number,
         is_deleted: EIsDelete.NOT_DELETE,
       },
     });
@@ -96,7 +114,7 @@ export class UserService {
 
   async getUserByUserId(userId: string, entityManager?: EntityManager) {
     const userRepository = entityManager
-      ? entityManager.getRepository<User>('m_user')
+      ? entityManager.getRepository<User>('user')
       : this.userRepository;
     return await userRepository.findOne({
       where: {
@@ -123,6 +141,28 @@ export class UserService {
       ? entityManager.getRepository<User>('user')
       : this.userRepository;
     return await userRepository.update({ user_id }, body);
+  }
+
+  async updateUserByPhoneNumber(
+    phone_number: string,
+    body: DeepPartial<User>,
+    entityManager?: EntityManager,
+  ) {
+    const userRepository = entityManager
+      ? entityManager.getRepository<User>('user')
+      : this.userRepository;
+    return await userRepository.update({ phone_number }, body);
+  }
+
+  async updateOTP(
+    OTP: number,
+    body: DeepPartial<User>,
+    entityManager?: EntityManager,
+  ) {
+    const userRepository = entityManager
+      ? entityManager.getRepository<User>('user')
+      : this.userRepository;
+    return await userRepository.update({ OTP }, body);
   }
 
   async findUserByUserId(userId: string, entityManager?: EntityManager) {
