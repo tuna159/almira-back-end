@@ -156,7 +156,7 @@ export class AuthService {
       OTP: otp,
     });
 
-    return true;
+    return phone_number;
   }
 
   async verifyPassword(body: VVerify) {
