@@ -103,6 +103,7 @@ export class PostService {
             ? EIsIncognito.NOT_INCOGNITO
             : EIsIncognito.INCOGNITO;
         postParams.post_type = body.post_type;
+        postParams.post_type = body.post_type;
 
         const post = await this.addPost(postParams, manager);
 

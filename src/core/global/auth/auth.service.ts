@@ -82,6 +82,7 @@ export class AuthService {
     userParams.password = await handleBCRYPTHash(body.password);
     userParams.phone_number = body.phone_number;
     userParams.is_deleted = EIsDelete.NOT_DELETE;
+    userParams.total_points = 100;
     const user = await this.connection.transaction(async (manager) => {
       const newUser = await this.userService.createUser(userParams, manager);
 
