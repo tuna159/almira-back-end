@@ -2,7 +2,7 @@ import * as twilio from 'twilio';
 
 // Initialize the Twilio client
 const accountSid = 'AC0eefefca22127faddf72bff0b61408dd';
-const authToken = 'ced833d485035c9f6e261b43555ae505';
+const authToken = 'b497f5c026a0dd6331ba2652d46ee8c4';
 const client = twilio(accountSid, authToken);
 
 // Send a text message
