@@ -48,4 +48,28 @@ export class UserBlockingService {
 
     return blocked.map((userblock) => userblock.blocked_on_id);
   }
+
+  async getBlockedAndBlockedByByUserId(
+    user_id: string,
+    entityManager?: EntityManager,
+  ) {
+    const userBlockingRepository = entityManager
+      ? entityManager.getRepository<UserBlocking>('user_blocking')
+      : this.userBlockingRepository;
+
+    const block = await userBlockingRepository
+      .createQueryBuilder('user_blocking')
+      .select(['user_blocking.blocked_by_id', 'user_blocking.blocked_on_id'])
+      .where(
+        'user_blocking.blocked_on_id = :user_id OR user_blocking.blocked_by_id = :user_id',
+        { user_id },
+      )
+      .getMany();
+
+    return block.map((e) => {
+      const blocking =
+        e.blocked_by_id === user_id ? e.blocked_on_id : e.blocked_by_id;
+      return blocking;
+    });
+  }
 }

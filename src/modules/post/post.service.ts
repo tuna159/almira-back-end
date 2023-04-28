@@ -6,11 +6,11 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EActivityType, EIsDelete, EIsIncognito } from 'enum';
+import { EActivityType, EIsDelete, EIsIncognito, EPostType } from 'enum';
 import { Post } from 'src/core/database/mysql/entity/post.entity';
 import { returnPostsData } from 'src/helper/utils';
 import { IUserData } from 'src/core/interface/default.interface';
-import { EntityManager, Repository } from 'typeorm';
+import { EntityManager, MoreThanOrEqual, Repository } from 'typeorm';
 import { VCreatePost } from 'global/post/dto/createPost.dto';
 import { DeepPartial } from 'typeorm/common/DeepPartial';
 import { Connection } from 'typeorm/connection/Connection';
@@ -34,12 +34,23 @@ import { UserService } from '../user/user.service';
 import { VReportPostDto } from 'global/post/dto/report-post.dto';
 import { PostReportingService } from '../post-reporting/post-reporting.service';
 import { In } from 'typeorm/find-options/operator/In';
+import { UserBlockingService } from '../user-blocking/user-blocking.service';
+import { FollowService } from '../follow/follow.service';
+import { User } from 'src/core/database/mysql/entity/user.entity';
+import { UserDetail } from 'src/core/database/mysql/entity/userDetail.entity';
 
 @Injectable()
 export class PostService {
   constructor(
     @InjectRepository(Post)
     private postRepository: Repository<Post>,
+
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
+
+    @InjectRepository(UserDetail)
+    private userDetailRepository: Repository<UserDetail>,
+
     private postImageService: PostImageService,
     private connection: Connection,
     private postCommentService: PostCommentService,
@@ -52,6 +63,8 @@ export class PostService {
     private giftService: GiftService,
     private userService: UserService,
     private postReportingService: PostReportingService,
+    private userBlockingService: UserBlockingService,
+    private followingService: FollowService,
   ) {}
 
   async getPosts(userData: IUserData, entityManager?: EntityManager) {
@@ -59,6 +72,39 @@ export class PostService {
     const postRepository = entityManager
       ? entityManager.getRepository<Post>('post')
       : this.postRepository;
+
+    const user = await this.userRepository.findOne({
+      where: {
+        user_id: userData.user_id,
+      },
+      relations: ['userDetail'],
+    });
+
+    const location = ` ST_GeomFromText('POINT(${user?.userDetail?.longitude} ${user?.userDetail?.latitude})') `;
+
+    const locationTarget = ` ST_GeomFromText(concat('POINT(', user_detail.longitude,' ',user_detail.latitude,')')) `;
+
+    const distance = ` ST_Distance_Sphere(${locationTarget}, ${location}) `;
+
+    const userDetail = await this.userDetailRepository
+      .createQueryBuilder('user_detail')
+      .select()
+      .addSelect(distance)
+      .andWhere(`${distance} <= :max_distance`, {
+        max_distance: 3000,
+      })
+      .getMany();
+
+    const userIdPosted = userDetail.map((user) => user.user_id);
+
+    const listNotSearch =
+      await this.userBlockingService.getBlockedAndBlockedByByUserId(
+        userData.user_id,
+      );
+
+    const matching = await this.followingService.getMatchingUser(
+      userData.user_id,
+    );
 
     const queryBuilder = postRepository
       .createQueryBuilder('post')
@@ -82,7 +128,27 @@ export class PostService {
       .where('post.is_deleted = :is_deleted', {
         is_deleted: EIsDelete.NOT_DELETE,
       })
+      .andWhere('post.post_type = :post_type', {
+        post_type: EPostType.PUBLIC,
+      })
+      .andWhere('post.user_id IN (:userIdPosted)', { userIdPosted })
       .orderBy('post.created_at', 'DESC');
+
+    if (listNotSearch.length > 0) {
+      queryBuilder.andWhere('post.user_id NOT IN (:listNotSearch)', {
+        listNotSearch,
+      });
+    }
+
+    if (matching.length > 0) {
+      queryBuilder.orWhere(
+        'post.user_id IN (:matching) AND post.post_type = :postType',
+        {
+          matching,
+          postType: EPostType.FRIEND,
+        },
+      );
+    }
 
     const [listPosts] = await queryBuilder.getManyAndCount();
 
@@ -102,7 +168,6 @@ export class PostService {
           body.is_incognito === false
             ? EIsIncognito.NOT_INCOGNITO
             : EIsIncognito.INCOGNITO;
-        postParams.post_type = body.post_type;
         postParams.post_type = body.post_type;
 
         const post = await this.addPost(postParams, manager);

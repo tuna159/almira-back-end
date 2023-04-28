@@ -1,4 +1,3 @@
-import { EIsDelete } from 'enum';
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('post_reporting')
@@ -22,14 +21,6 @@ export class PostReporting {
     length: 1000,
   })
   reason_message: string;
-
-  @Column({
-    name: 'is_deleted',
-    type: 'tinyint',
-    width: 1,
-    default: EIsDelete.NOT_DELETE,
-  })
-  is_deleted: number;
 
   @Column({
     name: 'created_at',

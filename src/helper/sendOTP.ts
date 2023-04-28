@@ -8,7 +8,6 @@ const client = twilio(accountSid, authToken);
 // Send a text message
 
 export default function sendOTP(to: string, otp: number) {
-  // const messageOTP = `Your OTP is ${otp}. Please enter it to verify your account.`;
   client.messages
     .create({
       body: `Your OTP is ${otp}. Please enter it to verify your account.`,

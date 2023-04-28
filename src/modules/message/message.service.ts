@@ -87,14 +87,11 @@ export class MessageService {
       return {
         message_id: e.message_id,
         content: e.content,
-        images: e.messageImages
-          .map((e) => {
-            return {
-              image_url: e.image_url,
-              sequence_no: e.sequence_no,
-            };
-          })
-          .sort((a, b) => a.sequence_no - b.sequence_no),
+        images: e.messageImages.map((e) => {
+          return {
+            image_url: e.image_url,
+          };
+        }),
         is_sent: userData.user_id === e.sender_id ? true : false,
         created: e.created_at,
       };
@@ -194,9 +191,8 @@ export class MessageService {
     return await this.getLastMessageByUserId(userData);
   }
 
-  async getLastMessageByUserId(userData: IUserData, is_archives = false) {
+  async getLastMessageByUserId(userData: IUserData) {
     const manager = getManager();
-    const searchQuery = is_archives ? 'IN' : 'NOT IN';
 
     const query_select_conversation = `
             SELECT

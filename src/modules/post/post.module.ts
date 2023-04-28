@@ -12,12 +12,16 @@ import { PostGiftModule } from '../post-gift/post-gift.module';
 import { GiftModule } from '../gift/gift.module';
 import { UserModule } from '../user/user.module';
 import { PostReportingModule } from '../post-reporting/post-reporting.module';
+import { UserBlockingModule } from '../user-blocking/user-blocking.module';
+import { FollowingModule } from '../follow/follow.module';
+import { User } from 'src/core/database/mysql/entity/user.entity';
+import { UserDetail } from 'src/core/database/mysql/entity/userDetail.entity';
 
 @Module({
   controllers: [PostController],
   providers: [PostService],
   imports: [
-    TypeOrmModule.forFeature([Post]),
+    TypeOrmModule.forFeature([Post, User, UserDetail]),
     PostImageModule,
     PostCommentModule,
     forwardRef(() => ActivityModule),
@@ -27,6 +31,8 @@ import { PostReportingModule } from '../post-reporting/post-reporting.module';
     GiftModule,
     UserModule,
     PostReportingModule,
+    UserBlockingModule,
+    FollowingModule,
   ],
   exports: [TypeOrmModule, PostService],
 })

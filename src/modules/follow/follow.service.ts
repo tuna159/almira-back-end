@@ -150,4 +150,20 @@ export class FollowService {
     });
     return data;
   }
+
+  async getMatchingUser(user_id: string, entityManager?: EntityManager) {
+    const followingRepository = entityManager
+      ? entityManager.getRepository<Following>('following')
+      : this.followRepository;
+
+    const data = await followingRepository.find({
+      where: {
+        user1_id: user_id,
+      },
+    });
+
+    return data.map((e) => {
+      return e.user2_id;
+    });
+  }
 }

@@ -1,4 +1,4 @@
-import { EIsDelete, EIsIncognito } from 'enum';
+import { EIsDelete } from 'enum';
 import {
   EActivityType,
   EReadActivity,
@@ -58,15 +58,6 @@ export class Activity {
     default: EReadActivity.UN_READ,
   })
   is_read: number;
-
-  @Column({
-    name: 'is_incognito',
-    type: 'tinyint',
-    width: 1,
-    comment: '0: not incognito, 1: incognito',
-    default: EIsIncognito.NOT_INCOGNITO,
-  })
-  is_incognito: number;
 
   @Column({
     name: 'is_deleted',

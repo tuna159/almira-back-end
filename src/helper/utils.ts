@@ -54,7 +54,6 @@ export function returnPostsData(user_id: string, post: DeepPartial<Post>) {
       'YYYY-MM-DD',
     ),
     updated: post?.updated_at,
-    is_incognito: !!post?.is_incognito,
   };
 }
 

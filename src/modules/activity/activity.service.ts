@@ -1,6 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EActivityType, EIsDelete, EIsIncognito } from 'enum';
+import { EActivityType, EIsDelete } from 'enum';
 import { Activity } from 'src/core/database/mysql/entity/activity.entity';
 import { Post } from 'src/core/database/mysql/entity/post.entity';
 import { PostComment } from 'src/core/database/mysql/entity/postComment.entity';
@@ -86,9 +86,6 @@ export class ActivityService {
       activityParams.post_id = post.post_id;
       activityParams.user_id = post.user_id;
       activityParams.type = EActivityType.LIKE;
-      activityParams.is_incognito = post.is_incognito
-        ? EIsIncognito.INCOGNITO
-        : EIsIncognito.NOT_INCOGNITO;
       activityParams.is_read = EReadActivity.UN_READ;
       activityParams.date_time = new Date();
       return await this.createActivityLike(activityParams, entityManager);

@@ -43,7 +43,7 @@ import { PostReportingModule } from './modules/post-reporting/post-reporting.mod
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         synchronize: true,
         autoLoadEntities: true,
-        logging: false,
+        logging: true,
         // logger: new DatabaseMysqlLogger(),
         timezone: '+07:00',
         legacySpatialSupport: false, //fix version mysql 8
