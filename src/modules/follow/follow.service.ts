@@ -5,7 +5,7 @@ import { ErrorMessage } from 'enum/error';
 import { Following } from 'src/core/database/mysql/entity/following.entity';
 import { IUserData } from 'src/core/interface/default.interface';
 import { DeepPartial, EntityManager, Repository } from 'typeorm';
-
+import { In } from 'typeorm/find-options/operator/In';
 @Injectable()
 export class FollowService {
   constructor(
@@ -165,5 +165,52 @@ export class FollowService {
     return data.map((e) => {
       return e.user2_id;
     });
+  }
+
+  async recommendFriends(user_id: string, entityManager?: EntityManager) {
+    const followingRepository = entityManager
+      ? entityManager.getRepository<Following>('following')
+      : this.followRepository;
+
+    let data = [];
+
+    const Afollow = await followingRepository.find({
+      select: ['user2_id'],
+      where: { user1_id: user_id },
+    });
+
+    const AfollowIds = Afollow.map((e) => e.user2_id);
+
+    const recommend = await followingRepository.find({
+      select: ['user2_id'],
+      where: { user1_id: In(AfollowIds) },
+    });
+
+    const rcFriends = recommend.map((e) => {
+      return e.user2_id;
+    });
+
+    const queryBuilder = followingRepository
+      .createQueryBuilder('following')
+      .select()
+      .leftJoinAndSelect('following.user2', 'user2')
+      .leftJoinAndSelect('user2.userDetail', 'userDetail')
+      .groupBy('following.user2_id');
+    if (rcFriends.length > 0) {
+      queryBuilder.where('following.user2_id IN (:user2_id)', {
+        user2_id: rcFriends,
+      });
+    }
+
+    const [listUser] = await queryBuilder.getManyAndCount();
+
+    data = listUser.map((following) => {
+      return {
+        user_id: following.user2.user_id,
+        nick_name: following.user2.user_name,
+        avatar: following.user2.userDetail.image_url,
+      };
+    });
+    return data;
   }
 }

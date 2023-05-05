@@ -20,6 +20,7 @@ import { UserVoucherService } from '../user-voucher/user-voucher.service';
 import { UserService } from '../user/user.service';
 import { AuthService } from 'src/core/global/auth/auth.service';
 import { VUpdatePassword } from 'global/user/dto/updatePassword.dto';
+import { FollowService } from '../follow/follow.service';
 
 @Injectable()
 export class MeService {
@@ -32,6 +33,7 @@ export class MeService {
     private connection: Connection,
     private userDetailService: UserDetailService,
     private authService: AuthService,
+    private followingService: FollowService,
   ) {}
 
   async getMe(userData: IUserData, entityManager?: EntityManager) {
@@ -177,5 +179,9 @@ export class MeService {
     });
 
     return true;
+  }
+
+  async recommendFriends(user_id: string) {
+    return this.followingService.recommendFriends(user_id);
   }
 }

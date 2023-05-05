@@ -49,4 +49,9 @@ export class MeController {
   ) {
     return this.meService.updateProfilePassword(userData.user_id, body);
   }
+
+  @Get('recommend-friends')
+  async recommendFriends(@UserData() userData: IUserData) {
+    return this.meService.recommendFriends(userData.user_id);
+  }
 }
