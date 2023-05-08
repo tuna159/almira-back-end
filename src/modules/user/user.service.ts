@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EIsDelete } from 'enum';
+import { EIsDelete, EPostType } from 'enum';
 import { ErrorMessage } from 'enum/error';
 import { VForgotPassword } from 'global/user/dto/forgotPassword.dto';
 import { VLogin } from 'global/user/dto/login.dto';
@@ -178,6 +178,57 @@ export class UserService {
     });
   }
 
+  async getUserDetailByID(
+    user_id,
+    userId: string,
+    entityManager?: EntityManager,
+  ) {
+    const userRepository = entityManager
+      ? entityManager.getRepository<User>('user')
+      : this.userRepository;
+
+    const matching = await this.followService.getMatchingUser(user_id);
+
+    const queryBuilder = userRepository
+      .createQueryBuilder('user')
+      .select()
+      .leftJoinAndSelect('user.userDetail', 'userDetail')
+      .leftJoinAndSelect('user.user1s', 'user1s')
+      .leftJoinAndSelect('user.user2s', 'user2s')
+      .leftJoinAndSelect(
+        'user.posts',
+        'posts',
+        '(posts.post_type = :post_type AND posts.is_deleted = :is_deleted) OR (posts.user_id IN (:matching) AND posts.post_type = :postType)',
+        {
+          post_type: EPostType.PUBLIC,
+          is_deleted: EIsDelete.NOT_DELETE,
+          matching,
+          postType: EPostType.FRIEND,
+        },
+      )
+      .leftJoinAndSelect('posts.postImage', 'postImage')
+      .where('user.user_id = :userId', {
+        userId: userId,
+      })
+      .andWhere('user.is_deleted = :is_deleted', {
+        is_deleted: EIsDelete.NOT_DELETE,
+      });
+
+    // if (matching.length > 0) {
+    //   queryBuilder.orWhere(
+    //     'posts.user_id IN (:matching) AND posts.post_type = :postType',
+    //     {
+    //       matching,
+    //       postType: EPostType.FRIEND,
+    //     },
+    //   );
+    // }
+
+    const user = queryBuilder.getOne();
+
+    return user;
+  }
+
   async getUserName(
     userData: IUserData,
     query: IPaginationQuery,
@@ -215,14 +266,16 @@ export class UserService {
   }
 
   async getUserDetail(userData: IUserData, targetUserId: string) {
-    const user = await this.findUserByUserId(targetUserId);
+    const usercheck = await this.findUserByUserId(targetUserId);
 
-    if (!user) {
+    if (!usercheck) {
       throw new HttpException(
         ErrorMessage.USER_DOES_NOT_EXIST,
         HttpStatus.BAD_REQUEST,
       );
     }
+
+    const user = await this.getUserDetailByID(userData.user_id, targetUserId);
 
     const post = user.posts.map((post) => returnPostsImage(post));
 
