@@ -189,6 +189,12 @@ export class UserService {
 
     const matching = await this.followService.getMatchingUser(user_id);
 
+    const post_type = [EPostType.PUBLIC];
+
+    if (matching) post_type.push(EPostType.FRIEND);
+
+    if (userId === userId) post_type.push(EPostType.PRIVATE);
+
     const queryBuilder = userRepository
       .createQueryBuilder('user')
       .select()
@@ -198,12 +204,10 @@ export class UserService {
       .leftJoinAndSelect(
         'user.posts',
         'posts',
-        '(posts.post_type = :post_type AND posts.is_deleted = :is_deleted) OR (posts.user_id IN (:matching) AND posts.post_type = :postType)',
+        'posts.post_type IN (:post_type) AND posts.is_deleted = :is_deleted',
         {
-          post_type: EPostType.PUBLIC,
+          post_type: post_type,
           is_deleted: EIsDelete.NOT_DELETE,
-          matching,
-          postType: EPostType.FRIEND,
         },
       )
       .leftJoinAndSelect('posts.postImage', 'postImage')
