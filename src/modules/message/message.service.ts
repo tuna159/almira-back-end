@@ -30,11 +30,7 @@ export class MessageService {
     private messageImageService: MessageImageService,
   ) {}
 
-  async getMessageListByUserId(
-    userData: IUserData,
-    target_user_id: string,
-    query: IPaginationQuery,
-  ) {
+  async getMessageListByUserId(userData: IUserData, target_user_id: string) {
     if (userData.user_id === target_user_id) {
       throw new HttpException(
         ErrorMessage.CANNOT_GET_TO_MYSELF,
@@ -76,10 +72,7 @@ export class MessageService {
         is_deleted: EIsDelete.NOT_DELETE,
       });
 
-    sqlMessage
-      .orderBy('message.created_at', 'ASC')
-      .skip(query.skip)
-      .take(query.limit);
+    sqlMessage.orderBy('message.created_at', 'ASC');
 
     const [message, totalItems] = await sqlMessage.getManyAndCount();
 
@@ -97,10 +90,10 @@ export class MessageService {
       };
     });
 
-    const is_last_page =
-      query.page < Math.ceil(totalItems / query.limit)
-        ? !!ECommonStatus.NO
-        : !!ECommonStatus.YES;
+    // const is_last_page =
+    //   query.page < Math.ceil(totalItems / query.limit)
+    //     ? !!ECommonStatus.NO
+    //     : !!ECommonStatus.YES;
 
     const is_deleted =
       targetUser.is_deleted == EIsDelete.NOT_DELETE ? false : true;
@@ -118,7 +111,7 @@ export class MessageService {
         is_deleted: is_deleted,
       },
       message_data: data,
-      is_last_page: is_last_page,
+      // is_last_page: is_last_page,
     };
   }
 
