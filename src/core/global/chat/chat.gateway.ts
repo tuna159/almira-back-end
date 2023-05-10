@@ -18,6 +18,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   async handleConnection(userData: IUserData, socket: Socket): Promise<void> {
     // Khi một client kết nối đến server
+    console.log(`Client connected: ${socket.id}`);
     const userId = socket.handshake.query.userId as string;
     console.log(`Client connected: ${userId}`);
 

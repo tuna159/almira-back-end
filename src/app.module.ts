@@ -26,6 +26,7 @@ import { PostGiftModule } from './modules/post-gift/post-gift.module';
 import { VoucherModule } from './modules/voucher/voucher.module';
 import { UserVoucherModule } from './modules/user-voucher/user-voucher.module';
 import { PostReportingModule } from './modules/post-reporting/post-reporting.module';
+import { ChatGatewayModule } from './core/global/chat/chat.gateway.module';
 
 @Module({
   imports: [
@@ -67,6 +68,7 @@ import { PostReportingModule } from './modules/post-reporting/post-reporting.mod
     VoucherModule,
     UserVoucherModule,
     PostReportingModule,
+    ChatGatewayModule,
   ],
   controllers: [AppController],
   providers: [
