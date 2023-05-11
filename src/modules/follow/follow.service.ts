@@ -190,10 +190,13 @@ export class FollowService {
       return e.user2_id;
     });
 
+    const matching = await this.getMatchingUser(user_id);
+
     const queryBuilder = followingRepository
       .createQueryBuilder('following')
       .select()
       .leftJoinAndSelect('following.user2', 'user2')
+      .leftJoinAndSelect('following.user1', 'user1')
       .leftJoinAndSelect('user2.userDetail', 'userDetail')
       .groupBy('following.user2_id');
     if (rcFriends.length > 0) {
@@ -201,8 +204,15 @@ export class FollowService {
         user2_id: rcFriends,
       });
     }
+    if (matching.length > 0) {
+      queryBuilder.where('following.user2_id NOT IN (:user2_id)', {
+        user2_id: matching,
+      });
+    }
 
     const [listUser] = await queryBuilder.getManyAndCount();
+
+    console.log(matching);
 
     data = listUser.map((following) => {
       return {

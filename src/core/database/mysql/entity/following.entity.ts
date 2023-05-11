@@ -10,6 +10,9 @@ import { User } from './user.entity';
 
 @Entity('following')
 export class Following {
+  includes(user_id: any): any {
+    throw new Error('Method not implemented.');
+  }
   @PrimaryGeneratedColumn({ name: 'following_id', type: 'int', unsigned: true })
   following_id: number;
 
