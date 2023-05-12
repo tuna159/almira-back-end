@@ -3,6 +3,7 @@ import { VSendMessage } from 'global/message/dto/send-messages';
 import { UserData } from 'src/core/decorator/user.decorator';
 import { IUserData } from 'src/core/interface/default.interface';
 import { MessageService } from './message.service';
+import { Public } from 'src/core/decorator/public.decorator';
 
 @Controller('message')
 export class MessageController {
@@ -16,7 +17,7 @@ export class MessageController {
   @Get('users/:user_id')
   async handleGetMessageList(@UserData() userData: IUserData, @Param() params) {
     return await this.messageService.getMessageListByUserId(
-      userData,
+      userData.user_id,
       params.user_id,
     );
   }
@@ -26,6 +27,6 @@ export class MessageController {
     @UserData() userData: IUserData,
     @Body() body: VSendMessage,
   ) {
-    return await this.messageService.sendMessages(userData, body);
+    return await this.messageService.sendMessages(userData.user_id, body);
   }
 }

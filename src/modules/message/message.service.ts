@@ -1,4 +1,10 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Inject,
+  Injectable,
+  forwardRef,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ECommonStatus, EIsDelete } from 'enum';
 import {
@@ -19,6 +25,7 @@ import { getManager } from 'typeorm/globals';
 import { MessageImageService } from '../message-image/message-image.service';
 import { UserService } from '../user/user.service';
 import moment = require('moment');
+import { ChatGateway } from 'src/core/global/chat/chat.gateway';
 
 @Injectable()
 export class MessageService {
@@ -28,10 +35,12 @@ export class MessageService {
     private userService: UserService,
     private connection: Connection,
     private messageImageService: MessageImageService,
+    @Inject(forwardRef(() => ChatGateway))
+    private chatGateway: ChatGateway,
   ) {}
 
-  async getMessageListByUserId(userData: IUserData, target_user_id: string) {
-    if (userData.user_id === target_user_id) {
+  async getMessageListByUserId(user_id: string, target_user_id: string) {
+    if (user_id === target_user_id) {
       throw new HttpException(
         ErrorMessage.CANNOT_GET_TO_MYSELF,
         HttpStatus.BAD_REQUEST,
@@ -64,7 +73,7 @@ export class MessageService {
         `((message.sender_id = :user_id AND message.receiver_id = :target_user_id) OR
           (message.sender_id = :target_user_id AND message.receiver_id = :user_id))`,
         {
-          user_id: userData.user_id,
+          user_id: user_id,
           target_user_id,
         },
       )
@@ -85,7 +94,7 @@ export class MessageService {
             image_url: e.image_url,
           };
         }),
-        is_sent: userData.user_id === e.sender_id ? true : false,
+        is_sent: user_id === e.sender_id ? true : false,
         created: e.created_at,
       };
     });
@@ -125,7 +134,7 @@ export class MessageService {
     return await messageRepository.save(value);
   }
 
-  async sendMessages(userData: IUserData, body: VSendMessage) {
+  async sendMessages(user_id: string, body: VSendMessage) {
     if (!body?.content && !body?.image_url) {
       throw new HttpException(
         ErrorMessage.INVALID_PARAM,
@@ -133,7 +142,7 @@ export class MessageService {
       );
     }
 
-    if (userData.user_id === body?.user_id) {
+    if (user_id === body?.user_id) {
       throw new HttpException(
         ErrorMessage.CANNOT_SEND_TO_MYSELF,
         HttpStatus.BAD_REQUEST,
@@ -151,7 +160,7 @@ export class MessageService {
 
     const message = await this.connection.transaction(async (manager) => {
       const messageParams = new Message();
-      messageParams.sender_id = userData.user_id;
+      messageParams.sender_id = user_id;
       messageParams.receiver_id = body?.user_id;
       messageParams.content = body?.content ? body?.content : '';
 
@@ -170,6 +179,8 @@ export class MessageService {
         messageImageParams,
         manager,
       );
+
+      this.chatGateway.server.to(body.user_id).emit('message', {});
 
       return message;
     });
