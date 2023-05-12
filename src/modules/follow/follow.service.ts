@@ -197,8 +197,7 @@ export class FollowService {
       .select()
       .leftJoinAndSelect('following.user2', 'user2')
       .leftJoinAndSelect('following.user1', 'user1')
-      .leftJoinAndSelect('user2.userDetail', 'userDetail')
-      .groupBy('following.user2_id');
+      .leftJoinAndSelect('user2.userDetail', 'userDetail');
     if (rcFriends.length > 0) {
       queryBuilder.where('following.user2_id IN (:user2_id)', {
         user2_id: rcFriends,
