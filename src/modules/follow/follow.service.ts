@@ -213,6 +213,21 @@ export class FollowService {
       relations: ['userDetail'],
     });
 
+    const notMatching = await this.userRepository.find({
+      where: {
+        user_id: Not(user_id),
+      },
+      relations: ['userDetail'],
+    });
+
+    const notm = notMatching.map((e) => {
+      return {
+        user_id: e.user_id,
+        nick_name: e.user_name,
+        avatar: e.userDetail.image_url,
+      };
+    });
+
     const ud = u.map((e) => {
       return {
         user_id: e.user_id,
@@ -220,7 +235,11 @@ export class FollowService {
         avatar: e.userDetail.image_url,
       };
     });
-    return ud;
+    if (ud.length === 0) {
+      return notm;
+    } else {
+      return ud;
+    }
 
     // console.log(rcFriends, 3333333333);
 
