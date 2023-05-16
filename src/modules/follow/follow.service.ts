@@ -3,14 +3,18 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { EIsDelete } from 'enum';
 import { ErrorMessage } from 'enum/error';
 import { Following } from 'src/core/database/mysql/entity/following.entity';
+import { User } from 'src/core/database/mysql/entity/user.entity';
 import { IUserData } from 'src/core/interface/default.interface';
-import { DeepPartial, EntityManager, Repository } from 'typeorm';
+import { DeepPartial, EntityManager, Not, Repository } from 'typeorm';
 import { In } from 'typeorm/find-options/operator/In';
 @Injectable()
 export class FollowService {
   constructor(
     @InjectRepository(Following)
     private followRepository: Repository<Following>,
+
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
   ) {}
 
   async followUser(
@@ -172,55 +176,95 @@ export class FollowService {
       ? entityManager.getRepository<Following>('following')
       : this.followRepository;
 
-    let data = [];
+    // let data = [];
 
-    const Afollow = await followingRepository.find({
+    const Allfollowing = await followingRepository.find({
       select: ['user2_id'],
       where: { user1_id: user_id },
     });
 
-    const AfollowIds = Afollow.map((e) => e.user2_id);
+    const AllfollowingIds = Allfollowing.map((e) => e.user2_id).filter(
+      (uid) => uid !== user_id,
+    );
+
+    console.log(AllfollowingIds, 'AllfollowingIds');
 
     const recommend = await followingRepository.find({
       select: ['user2_id'],
-      where: { user1_id: In(AfollowIds) },
+      where: { user1_id: In(AllfollowingIds), user2_id: Not(user_id) },
     });
 
     const rcFriends = recommend.map((e) => {
       return e.user2_id;
     });
 
+    console.log(rcFriends, 'rcFriends');
+
     const matching = await this.getMatchingUser(user_id);
 
-    const queryBuilder = followingRepository
-      .createQueryBuilder('following')
-      .select()
-      .leftJoinAndSelect('following.user2', 'user2')
-      .leftJoinAndSelect('following.user1', 'user1')
-      .leftJoinAndSelect('user2.userDetail', 'userDetail')
-      .groupBy('following.user2_id');
-    if (rcFriends.length > 0) {
-      queryBuilder.where('following.user2_id IN (:user2_id)', {
-        user2_id: rcFriends,
-      });
-    }
-    if (matching.length > 0) {
-      queryBuilder.where('following.user2_id NOT IN (:user2_id)', {
-        user2_id: matching,
-      });
-    }
+    console.log(matching, 'matching');
 
-    const [listUser] = await queryBuilder.getManyAndCount();
+    const as = rcFriends.filter((re) => !matching.includes(re));
 
-    console.log(matching);
+    const u = await this.userRepository.find({
+      where: {
+        user_id: In(as),
+      },
+      relations: ['userDetail'],
+    });
 
-    data = listUser.map((following) => {
+    const ud = u.map((e) => {
       return {
-        user_id: following.user2.user_id,
-        nick_name: following.user2.user_name,
-        avatar: following.user2.userDetail.image_url,
+        user_id: e.user_id,
+        nick_name: e.user_name,
+        avatar: e.userDetail.image_url,
       };
     });
-    return data;
+    return ud;
+
+    // console.log(rcFriends, 3333333333);
+
+    // const queryBuilder = followingRepository
+    //   .createQueryBuilder('following')
+    //   .select()
+    //   .leftJoinAndSelect('following.user2', 'user2')
+    //   .leftJoinAndSelect('following.user1', 'user1')
+    //   .leftJoinAndSelect('user2.userDetail', 'userDetail')
+    //   .groupBy('following.user1_id');
+    // if (rcFriends.length > 0) {
+    //   queryBuilder
+    //     .where('following.user1_id IN (:user2_id)', {
+    //       user2_id: rcFriends,
+    //     })
+    //     .where('following.user2_id NOT IN (:user_id)', {
+    //       user_id: user_id,
+    //     });
+    // }
+    // if (matching.length > 0) {
+    //   queryBuilder.where('following.user2_id NOT IN (:user2_id)', {
+    //     user2_id: matching,
+    //   });
+    // }
+
+    // const listUser = await queryBuilder.getMany();
+
+    // // console.log(matching);
+
+    // // const matched = [];
+
+    // // const recommend = [];
+
+    // const dataa = rcFriends.filter((re) => !matching.includes(user_id));
+
+    // console.log(dataa);
+
+    // data = listUser.map((following) => {
+    //   return {
+    //     user_id: following.user2.user_id,
+    //     nick_name: following.user2.user_name,
+    //     avatar: following.user2.userDetail.image_url,
+    //   };
+    // });
+    // return data;
   }
 }
