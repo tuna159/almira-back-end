@@ -193,7 +193,8 @@ export class UserService {
 
     const post_type = [EPostType.PUBLIC];
 
-    if (matching.length > 0) post_type.push(EPostType.FRIEND);
+    if (matching.length > 0 || userId === user_id)
+      post_type.push(EPostType.FRIEND);
 
     if (userId === user_id) post_type.push(EPostType.PRIVATE);
 
@@ -219,16 +220,6 @@ export class UserService {
       .andWhere('user.is_deleted = :is_deleted', {
         is_deleted: EIsDelete.NOT_DELETE,
       });
-
-    // if (matching.length > 0) {
-    //   queryBuilder.orWhere(
-    //     'posts.user_id IN (:matching) AND posts.post_type = :postType',
-    //     {
-    //       matching,
-    //       postType: EPostType.FRIEND,
-    //     },
-    //   );
-    // }
 
     const user = queryBuilder.getOne();
 
@@ -289,7 +280,6 @@ export class UserService {
       targetUserId,
       userData.user_id,
     );
-    console.log(checkBlocking);
 
     const data = {
       user_id: user?.user_id,
