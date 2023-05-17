@@ -313,11 +313,13 @@ export class UserService {
         avatar:
           'https://icon-library.com/images/default-user-icon/default-user-icon-13.jpg',
         introduction: '',
-        post_count: user.posts.length,
+        post_count: 0,
         post: [],
         followers: 0,
         following: 0,
-        is_following: false,
+        is_following: user.user2s
+          ?.map((user2s) => user2s.user1_id)
+          .includes(userData.user_id),
         total_points: 0,
       };
     } else {

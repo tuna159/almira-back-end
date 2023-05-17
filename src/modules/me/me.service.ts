@@ -95,6 +95,7 @@ export class MeService {
       );
     }
     await this.userBlockingService.blockUser(blocked_on_id, userData.user_id);
+    await this.followingService.deleteUserFollow({ user2_id: blocked_on_id });
     return null;
   }
 
