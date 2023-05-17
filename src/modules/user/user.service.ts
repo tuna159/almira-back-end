@@ -193,7 +193,7 @@ export class UserService {
 
     if (matching) post_type.push(EPostType.FRIEND);
 
-    if (userId === userId) post_type.push(EPostType.PRIVATE);
+    if (userId === user_id) post_type.push(EPostType.PRIVATE);
 
     const queryBuilder = userRepository
       .createQueryBuilder('user')
