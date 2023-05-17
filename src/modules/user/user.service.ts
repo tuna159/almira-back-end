@@ -187,7 +187,7 @@ export class UserService {
       ? entityManager.getRepository<User>('user')
       : this.userRepository;
 
-    const matching = await this.followService.getMatchingUser(user_id);
+    const matching = await this.followService.getMatchedUser(user_id, userId);
 
     const post_type = [EPostType.PUBLIC];
 

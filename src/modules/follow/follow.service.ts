@@ -171,6 +171,25 @@ export class FollowService {
     });
   }
 
+  async getMatchedUser(
+    user_id: string,
+    uid: string,
+    entityManager?: EntityManager,
+  ) {
+    const followingRepository = entityManager
+      ? entityManager.getRepository<Following>('following')
+      : this.followRepository;
+
+    const data = await followingRepository.find({
+      where: {
+        user1_id: user_id,
+        user2: uid,
+      },
+    });
+
+    return data;
+  }
+
   async recommendFriends(user_id: string, entityManager?: EntityManager) {
     const followingRepository = entityManager
       ? entityManager.getRepository<Following>('following')
