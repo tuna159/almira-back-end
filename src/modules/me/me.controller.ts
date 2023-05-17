@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Post, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+} from '@nestjs/common';
 import { VBlockUser } from 'global/user/dto/blockUser.dto';
 import { VRedeemVoucher } from 'global/user/dto/redeemVoucher.dto';
 import { VUpdateProfile } from 'global/user/dto/update-profile.dto';
@@ -53,5 +61,10 @@ export class MeController {
   @Get('recommend-friends')
   async recommendFriends(@UserData() userData: IUserData) {
     return this.meService.recommendFriends(userData.user_id);
+  }
+
+  @Delete('blocks/:user_id')
+  async unBlockUser(@UserData() userData: IUserData, @Param() param) {
+    return await this.meService.unBlockUser(param.user_id, userData);
   }
 }

@@ -612,9 +612,8 @@ export class PostService {
         HttpStatus.BAD_REQUEST,
       );
     }
-    const user = this.userService.getUserByUserId(post.user_id);
 
-    if (!user) {
+    if (post.user_id === userData.user_id) {
       throw new HttpException(
         ErrorMessage.CAN_NOT_SEND_GIFT_TO_MY_SELF,
         HttpStatus.BAD_REQUEST,

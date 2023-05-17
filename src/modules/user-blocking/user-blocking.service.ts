@@ -72,4 +72,19 @@ export class UserBlockingService {
       return blocking;
     });
   }
+
+  async unBlockUser(
+    blocked_on_id: string,
+    blocked_by_id: string,
+    entityManager?: EntityManager,
+  ) {
+    const userBlockingRepository = entityManager
+      ? entityManager.getRepository<UserBlocking>('t_user_blocking')
+      : this.userBlockingRepository;
+
+    return await userBlockingRepository.delete({
+      blocked_on_id,
+      blocked_by_id,
+    });
+  }
 }

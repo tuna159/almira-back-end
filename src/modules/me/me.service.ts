@@ -184,4 +184,27 @@ export class MeService {
   async recommendFriends(user_id: string) {
     return this.followingService.recommendFriends(user_id);
   }
+
+  async unBlockUser(blocked_on_id: string, userData: IUserData) {
+    const user = await this.userService.findUserByUserId(blocked_on_id);
+
+    if (!user) {
+      throw new HttpException(
+        ErrorMessage.USER_DOES_NOT_EXIST,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const blocking = await this.userBlockingService.checkBlocking(
+      blocked_on_id,
+      userData.user_id,
+    );
+
+    if (!blocking) {
+      throw new HttpException(ErrorMessage.NOT_BLOCKED, HttpStatus.BAD_REQUEST);
+    }
+
+    await this.userBlockingService.unBlockUser(blocked_on_id, userData.user_id);
+    return null;
+  }
 }

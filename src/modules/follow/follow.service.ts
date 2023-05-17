@@ -235,12 +235,8 @@ export class FollowService {
         avatar: e.userDetail.image_url,
       };
     });
-    if (ud.length === 0) {
-      return notm;
-    } else {
-      return ud;
-    }
 
+    return ud;
     // console.log(rcFriends, 3333333333);
 
     // const queryBuilder = followingRepository
