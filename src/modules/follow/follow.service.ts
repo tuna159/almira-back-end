@@ -54,7 +54,7 @@ export class FollowService {
 
   async unFollowUser(userData: IUserData, user_id: string) {
     await this.deleteUserFollow({
-      user1_id: userData.user_idl,
+      user1_id: userData.user_id,
       user2_id: user_id,
     });
     return;
