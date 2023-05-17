@@ -16,6 +16,7 @@ import { returnPostsImage } from 'src/helper/utils';
 import { DeepPartial, EntityManager, Repository } from 'typeorm';
 import { FollowService } from '../follow/follow.service';
 import { VVerify } from 'global/user/dto/verifyPassword.dto';
+import { UserBlockingService } from '../user-blocking/user-blocking.service';
 
 @Injectable()
 export class UserService {
@@ -24,6 +25,7 @@ export class UserService {
     private userRepository: Repository<User>,
     private authService: AuthService,
     private followService: FollowService,
+    private userBlockingService: UserBlockingService,
   ) {}
 
   async signup(body: VSignUp) {
@@ -191,7 +193,7 @@ export class UserService {
 
     const post_type = [EPostType.PUBLIC];
 
-    if (matching) post_type.push(EPostType.FRIEND);
+    if (matching.length > 0) post_type.push(EPostType.FRIEND);
 
     if (userId === user_id) post_type.push(EPostType.PRIVATE);
 
@@ -283,6 +285,12 @@ export class UserService {
 
     const post = user.posts.map((post) => returnPostsImage(post));
 
+    const checkBlocking = await this.userBlockingService.checkBlocking(
+      targetUserId,
+      userData.user_id,
+    );
+    console.log(checkBlocking);
+
     const data = {
       user_id: user?.user_id,
       user_name: user?.user_name,
@@ -297,7 +305,24 @@ export class UserService {
         .includes(userData.user_id),
       total_points: user.total_points,
     };
-    return data;
+
+    if (checkBlocking) {
+      return {
+        user_id: user?.user_id,
+        user_name: user?.user_name,
+        avatar:
+          'https://icon-library.com/images/default-user-icon/default-user-icon-13.jpg',
+        introduction: '',
+        post_count: user.posts.length,
+        post: [],
+        followers: 0,
+        following: 0,
+        is_following: false,
+        total_points: 0,
+      };
+    } else {
+      return data;
+    }
   }
 
   // async getToken(userData: IUserData) {

@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from 'src/core/database/mysql/entity/user.entity';
 import { AuthModule } from 'src/core/global/auth/auth.module';
 import { FollowingModule } from '../follow/follow.module';
+import { UserBlockingModule } from '../user-blocking/user-blocking.module';
 
 @Module({
   controllers: [UserController],
@@ -13,6 +14,7 @@ import { FollowingModule } from '../follow/follow.module';
     TypeOrmModule.forFeature([User]),
     forwardRef(() => AuthModule),
     FollowingModule,
+    UserBlockingModule,
   ],
   exports: [TypeOrmModule, UserService],
 })

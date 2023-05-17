@@ -183,7 +183,7 @@ export class FollowService {
     const data = await followingRepository.find({
       where: {
         user1_id: user_id,
-        user2: uid,
+        user2_id: uid,
       },
     });
 
